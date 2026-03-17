@@ -27,7 +27,7 @@ void PrintTimes(TTimes & times, uint32_t numLayers);
 
 int main(int argc, char ** argv)
 {
-  CConv2DProxy convolver(true); // Activate logging. Deactivate if too verbose
+  CConv2DProxy convolver(false); // Activate logging. Deactivate if too verbose
 
   if (argc != 2) {
     printf("Usage: cnnSolver image.rgba.planar\n");
@@ -53,8 +53,10 @@ int main(int argc, char ** argv)
     return -1;
   }
 
-  if (!LoadModelInFxP(weights, biases)) {
+  if (!LoadModelInFxP(weights, biases, convolver)) {
     printf("Error loading the CNN model and converting to FxP!\n");
+    FreeParams(NUM_LAYERS, (void**)weights, convolver);
+    FreeParams(NUM_LAYERS, (void**)biases, convolver);
     convolver.FreeDMACompatible(inputImageFxp);
     convolver.FreeDMACompatible(buffer0);
     convolver.FreeDMACompatible(buffer1);

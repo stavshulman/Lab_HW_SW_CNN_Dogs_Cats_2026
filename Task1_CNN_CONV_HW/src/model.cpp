@@ -8,7 +8,17 @@
 #include "model.h"
 #include "cnn.h"
 
-bool ConvertWeightsToFxP(const uint32_t numLayers, float ** floatWeights, TFXP ** fxpWeights)
+static void FreeSWParams(const uint32_t numLayers, void ** params)
+{
+  for (uint32_t ii = 0; ii < numLayers; ++ ii) {
+    if (params[ii]) {
+      free(params[ii]);
+      params[ii] = NULL;
+    }
+  }
+}
+
+bool ConvertWeightsToFxP(const uint32_t numLayers, float ** floatWeights, TFXP ** fxpWeights, CConv2DProxy & conv2DHW)
 {
   float * pFloat;
   TFXP * pFxp;
@@ -16,7 +26,8 @@ bool ConvertWeightsToFxP(const uint32_t numLayers, float ** floatWeights, TFXP *
   for (uint32_t iLayer = 0; iLayer < numLayers; ++ iLayer) {
     pFloat = floatWeights[iLayer];
     uint32_t layerSize = LayerTypes[iLayer] == CONV ? LayerShapes[iLayer][0] * LayerShapes[iLayer][1] * 3*3 : LayerShapes[iLayer][0] * LayerShapes[iLayer][1];
-    if ( (fxpWeights[iLayer] = (TFXP*)malloc(layerSize * sizeof(TFXP))) == NULL ) {
+    // Equivalent to malloc, but we need to allocate the weights in DMA-compatible memory :))
+    if ( (fxpWeights[iLayer] = (TFXP*)conv2DHW.AllocDMACompatible(layerSize * sizeof(TFXP))) == NULL ) {
       printf("Error allocating %" PRIu32 " bytes for FxP weights in layer %u\n", (uint32_t)(layerSize*sizeof(TFXP)), iLayer);
       return false;
     }
@@ -40,7 +51,7 @@ bool ConvertWeightsToFxP(const uint32_t numLayers, float ** floatWeights, TFXP *
   return true;
 }
 
-void FreeParams(const uint32_t numLayers, void ** params, Conv2DProxy & conv2DHW)
+void FreeParams(const uint32_t numLayers, void ** params, CConv2DProxy & conv2DHW)
 {
   for (uint32_t ii = 0; ii < numLayers; ++ ii) {
     if (params[ii]) {
@@ -73,12 +84,13 @@ bool LoadFloatWeights(const uint32_t numLayers, float ** weights)
       fclose(input);
       return false;
     }
+    fclose(input);
   }
 
   return true;
 }
 
-bool ConvertBiasesToFxP(const uint32_t numLayers, float ** floatBiases, TFXP ** fxpBiases)
+bool ConvertBiasesToFxP(const uint32_t numLayers, float ** floatBiases, TFXP ** fxpBiases, CConv2DProxy & conv2DHW)
 {
   float * pFloat;
   TFXP * pFxp;
@@ -86,7 +98,8 @@ bool ConvertBiasesToFxP(const uint32_t numLayers, float ** floatBiases, TFXP ** 
   for (uint32_t iLayer = 0; iLayer < numLayers; ++ iLayer) {
     pFloat = floatBiases[iLayer];
     uint32_t layerSize = LayerShapes[iLayer][1];
-    if ( (fxpBiases[iLayer] = (TFXP*)malloc(layerSize * sizeof(TFXP))) == NULL ) {
+    // malloc -> AllocDMACompatible
+    if ( (fxpBiases[iLayer] = (TFXP*)conv2DHW.AllocDMACompatible(layerSize * sizeof(TFXP))) == NULL ) {
       printf("Error allocating %" PRIu32 " bytes for FxP biases in layer %u\n", (uint32_t)(layerSize*sizeof(TFXP)), iLayer);
       return false;
     }
@@ -123,12 +136,13 @@ bool LoadFloatBiases(const uint32_t numLayers, float ** biases)
       fclose(input);
       return false;
     }
+    fclose(input);
   }
 
   return true;
 }
 
-bool LoadModelInFxP(TFXP ** fxpWeights, TFXP ** fxpBiases)
+bool LoadModelInFxP(TFXP ** fxpWeights, TFXP ** fxpBiases, CConv2DProxy & conv2DHW)
 {
   float * floatWeights[NUM_LAYERS];
   float * floatBiases[NUM_LAYERS];
@@ -142,20 +156,31 @@ bool LoadModelInFxP(TFXP ** fxpWeights, TFXP ** fxpBiases)
 
   if (!LoadFloatWeights(NUM_LAYERS, floatWeights)) {
     printf("Error reading the float weights.\n");
-    FreeParams(NUM_LAYERS, (void**)floatWeights);
+    FreeSWParams(NUM_LAYERS, (void**)floatWeights);
     return false;
   }
-  ConvertWeightsToFxP(NUM_LAYERS, floatWeights, fxpWeights);
-  FreeParams(NUM_LAYERS, (void**)floatWeights);
+  if (!ConvertWeightsToFxP(NUM_LAYERS, floatWeights, fxpWeights, conv2DHW)) {
+    printf("Error converting float weights to FxP.\n");
+    FreeSWParams(NUM_LAYERS, (void**)floatWeights);
+    FreeParams(NUM_LAYERS, (void**)fxpWeights, conv2DHW);
+    return false;
+  }
+  FreeSWParams(NUM_LAYERS, (void**)floatWeights);
 
   if (!LoadFloatBiases(NUM_LAYERS, floatBiases)) {
     printf("Error reading the float biases.\n");
-    FreeParams(NUM_LAYERS, (void**)floatBiases);
-    FreeParams(NUM_LAYERS, (void**)fxpWeights);
+    FreeSWParams(NUM_LAYERS, (void**)floatBiases);
+    FreeParams(NUM_LAYERS, (void**)fxpWeights, conv2DHW);
     return false;
   }
-  ConvertBiasesToFxP(NUM_LAYERS, floatBiases, fxpBiases);
-  FreeParams(NUM_LAYERS, (void**)floatBiases);
+  if (!ConvertBiasesToFxP(NUM_LAYERS, floatBiases, fxpBiases, conv2DHW)) {
+    printf("Error converting float biases to FxP.\n");
+    FreeSWParams(NUM_LAYERS, (void**)floatBiases);
+    FreeParams(NUM_LAYERS, (void**)fxpWeights, conv2DHW);
+    FreeParams(NUM_LAYERS, (void**)fxpBiases, conv2DHW);
+    return false;
+  }
+  FreeSWParams(NUM_LAYERS, (void**)floatBiases);
 
   return true;
 }
@@ -203,13 +228,14 @@ TFXP Inference(TFXP * inputImageFxp, TFXP * buffer0, TFXP * buffer1, TFXP ** fxp
   // Conv2D(inputImageFxp, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][1], LayerShapes[iLayer][0], size, size);
   // call to HW convolution:
   // inputImageFxp to buffer0
-  conv2DHW.Conv2D_HW(inputImageFxp, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][1], LayerShapes[iLayer][0], size, size);
+  conv2DHW.Conv2D_HW(inputImageFxp, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][0], LayerShapes[iLayer][1], size, size);
   size -= 2;
   AddBiases(buffer0, fxpBiases[iLayer], LayerShapes[iLayer][1], size, size);
   ReLU(buffer0, LayerShapes[iLayer][1], size, size);
   clock_gettime(CLOCK_MONOTONIC_RAW, &end);
   times.timeConv[iLayer] = CalcTimeDiff(end, start);
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+  // buffer0 to buffer1 !!!!!!!
   MaxPool(buffer0, buffer1, LayerShapes[iLayer][1], size, size);
   clock_gettime(CLOCK_MONOTONIC_RAW, &end);
   times.timeMaxPool[iLayer] = CalcTimeDiff(end, start);
@@ -221,11 +247,11 @@ TFXP Inference(TFXP * inputImageFxp, TFXP * buffer0, TFXP * buffer1, TFXP ** fxp
   size = 127;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   // Conv2D(buffer1, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][1], LayerShapes[iLayer][0], size, size);
-  // buffer0 to buffer1
-  conv2DHW.Conv2D_HW(buffer0, buffer1, fxpWeights[iLayer], LayerShapes[iLayer][1], LayerShapes[iLayer][0], size, size);
+  // buffer1 to buffer0
+  conv2DHW.Conv2D_HW(buffer1, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][0], LayerShapes[iLayer][1], size, size);
   size -= 2;
-  AddBiases(buffer1, fxpBiases[iLayer], LayerShapes[iLayer][1], size, size);
-  ReLU(buffer1, LayerShapes[iLayer][1], size, size);
+  AddBiases(buffer0, fxpBiases[iLayer], LayerShapes[iLayer][1], size, size);
+  ReLU(buffer0, LayerShapes[iLayer][1], size, size);
   clock_gettime(CLOCK_MONOTONIC_RAW, &end);
   times.timeConv[iLayer] = CalcTimeDiff(end, start);
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
@@ -241,7 +267,7 @@ TFXP Inference(TFXP * inputImageFxp, TFXP * buffer0, TFXP * buffer1, TFXP ** fxp
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   //Conv2D(buffer1, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][1], LayerShapes[iLayer][0], size, size);
   // buffer1 to buffer0
-  conv2DHW.Conv2D_HW(buffer1, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][1], LayerShapes[iLayer][0], size, size);
+  conv2DHW.Conv2D_HW(buffer1, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][0], LayerShapes[iLayer][1], size, size);
   size -= 2;
   AddBiases(buffer0, fxpBiases[iLayer], LayerShapes[iLayer][1], size, size);
   ReLU(buffer0, LayerShapes[iLayer][1], size, size);
@@ -259,11 +285,11 @@ TFXP Inference(TFXP * inputImageFxp, TFXP * buffer0, TFXP * buffer1, TFXP ** fxp
   size = 30;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   //Conv2D(buffer1, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][1], LayerShapes[iLayer][0], size, size);
-  // buffer0 to buffer1
-  conv2DHW.Conv2D_HW(buffer0, buffer1, fxpWeights[iLayer], LayerShapes[iLayer][1], LayerShapes[iLayer][0], size, size);
+  // buffer1 to buffer0
+  conv2DHW.Conv2D_HW(buffer1, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][0], LayerShapes[iLayer][1], size, size);
   size -= 2;
-  AddBiases(buffer1, fxpBiases[iLayer], LayerShapes[iLayer][1], size, size);
-  ReLU(buffer1, LayerShapes[iLayer][1], size, size);
+  AddBiases(buffer0, fxpBiases[iLayer], LayerShapes[iLayer][1], size, size);
+  ReLU(buffer0, LayerShapes[iLayer][1], size, size);
   clock_gettime(CLOCK_MONOTONIC_RAW, &end);
   times.timeConv[iLayer] = CalcTimeDiff(end, start);
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
@@ -279,7 +305,7 @@ TFXP Inference(TFXP * inputImageFxp, TFXP * buffer0, TFXP * buffer1, TFXP ** fxp
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   //Conv2D(buffer1, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][1], LayerShapes[iLayer][0], size, size);
   // buffer1 to buffer0
-  conv2DHW.Conv2D_HW(buffer1, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][1], LayerShapes[iLayer][0], size, size);
+  conv2DHW.Conv2D_HW(buffer1, buffer0, fxpWeights[iLayer], LayerShapes[iLayer][0], LayerShapes[iLayer][1], size, size);
   size -= 2;
   AddBiases(buffer0, fxpBiases[iLayer], LayerShapes[iLayer][1], size, size);
   ReLU(buffer0, LayerShapes[iLayer][1], size, size);
