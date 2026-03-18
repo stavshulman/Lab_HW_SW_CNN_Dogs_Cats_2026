@@ -8,16 +8,6 @@
 #include "model.h"
 #include "cnn.h"
 
-static void FreeSWParams(const uint32_t numLayers, void ** params)
-{
-  for (uint32_t ii = 0; ii < numLayers; ++ ii) {
-    if (params[ii]) {
-      free(params[ii]);
-      params[ii] = NULL;
-    }
-  }
-}
-
 bool ConvertWeightsToFxP(const uint32_t numLayers, float ** floatWeights, TFXP ** fxpWeights, CConv2DProxy & conv2DHW)
 {
   float * pFloat;
@@ -156,31 +146,31 @@ bool LoadModelInFxP(TFXP ** fxpWeights, TFXP ** fxpBiases, CConv2DProxy & conv2D
 
   if (!LoadFloatWeights(NUM_LAYERS, floatWeights)) {
     printf("Error reading the float weights.\n");
-    FreeSWParams(NUM_LAYERS, (void**)floatWeights);
+    FreeParams(NUM_LAYERS, (void**)floatWeights, conv2DHW);
     return false;
   }
   if (!ConvertWeightsToFxP(NUM_LAYERS, floatWeights, fxpWeights, conv2DHW)) {
     printf("Error converting float weights to FxP.\n");
-    FreeSWParams(NUM_LAYERS, (void**)floatWeights);
+    FreeParams(NUM_LAYERS, (void**)floatWeights, conv2DHW);
     FreeParams(NUM_LAYERS, (void**)fxpWeights, conv2DHW);
     return false;
   }
-  FreeSWParams(NUM_LAYERS, (void**)floatWeights);
+  FreeParams(NUM_LAYERS, (void**)floatWeights, conv2DHW);
 
   if (!LoadFloatBiases(NUM_LAYERS, floatBiases)) {
     printf("Error reading the float biases.\n");
-    FreeSWParams(NUM_LAYERS, (void**)floatBiases);
+    FreeParams(NUM_LAYERS, (void**)floatBiases, conv2DHW);
     FreeParams(NUM_LAYERS, (void**)fxpWeights, conv2DHW);
     return false;
   }
   if (!ConvertBiasesToFxP(NUM_LAYERS, floatBiases, fxpBiases, conv2DHW)) {
     printf("Error converting float biases to FxP.\n");
-    FreeSWParams(NUM_LAYERS, (void**)floatBiases);
+    FreeParams(NUM_LAYERS, (void**)floatBiases, conv2DHW);
     FreeParams(NUM_LAYERS, (void**)fxpWeights, conv2DHW);
     FreeParams(NUM_LAYERS, (void**)fxpBiases, conv2DHW);
     return false;
   }
-  FreeSWParams(NUM_LAYERS, (void**)floatBiases);
+  FreeParams(NUM_LAYERS, (void**)floatBiases, conv2DHW);
 
   return true;
 }
@@ -194,7 +184,7 @@ bool LoadImageInFxp(const char * fileName, TFXP * inputImageFxp, uint8_t * input
   if (inputImageFile == NULL) {
     printf("Error opening image [%s]\n", fileName);
     return false;
-  }  
+  }
 
   if ( fread(inputImageRGB, 1, inputSize, inputImageFile) != inputSize ) {
     printf("Error reading %u bytes from [%s]\n", inputSize, fileName);
@@ -216,9 +206,9 @@ TFXP Inference(TFXP * inputImageFxp, TFXP * buffer0, TFXP * buffer1, TFXP ** fxp
   struct timespec start, end;
 
   /*
-  We want to implement the "ping-pong buffers" as explained in the exercise 3 homework statement. 
+  We want to implement the "ping-pong buffers" as explained in the exercise 3 homework statement.
   */
-  
+
   ///////////////////////////////////////////////////////////////////////////////
   // Layer0: Conv0 + Maxpool 2%
   ///////////////////////////////////////////////////////////////////////////////
@@ -356,7 +346,3 @@ uint64_t CalcTimeDiff(const struct timespec & time2, const struct timespec & tim
     time2.tv_nsec - time1.tv_nsec :
     (time2.tv_sec - time1.tv_sec - 1) * 1e9 + (1e9 - time1.tv_nsec) + time2.tv_nsec;
 }
-
-
-
-
