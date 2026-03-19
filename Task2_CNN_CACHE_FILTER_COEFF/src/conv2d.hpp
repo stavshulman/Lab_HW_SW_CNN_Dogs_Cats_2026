@@ -14,7 +14,7 @@ const uint32_t MAX_CHANNELS = 256;
 const uint32_t MAX_CONV_H   = 3;
 const uint32_t MAX_CONV_W   = 3;
 
-// Check if convHeight = 3 is correst in header/cpp file
+// Check if convHeight = 3 is correct in header/cpp file
 void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
       uint32_t numChannels, uint32_t numFilters,
       uint32_t inputWidth, uint32_t inputHeight,
