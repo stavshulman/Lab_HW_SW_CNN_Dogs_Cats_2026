@@ -47,9 +47,9 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                 loop_load_coef_x : for (uint32_t x = 0; x < convWidth; ++x) {
                     #pragma HLS PIPELINE II=1
                     filterCoeffs[iChannel][y][x] = *(coeffs
-                                                    + iFilter  * numChannels * convHeight * convWidth
-                                                    + iChannel * convHeight  * convWidth
-                                                    + y        * convWidth
+                                                    + iFilter*numChannels*convHeight*convWidth
+                                                    + iChannel*convHeight*convWidth
+                                                    + y*convWidth
                                                     + x);
                 }
             }
@@ -68,9 +68,9 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                             #pragma HLS PIPELINE II=1
                             TFXP pixelValue, coeffValue;
                             coeffValue = filterCoeffs[iChannel][cy][cx];
-                            pixelValue = *(input + iChannel * inputWidth * inputHeight
-                                                 + (y + cy)  * inputWidth
-                                                 + (x + cx));
+                            pixelValue = *(input+iChannel*inputWidth*inputHeight
+                                                + (y+cy)*inputWidth
+                                                + (x+cx));
                             acc += FXP_Mult(coeffValue, pixelValue, DECIMALS);
                         }
                     }
