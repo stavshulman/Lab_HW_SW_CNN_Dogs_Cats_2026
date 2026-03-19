@@ -16,7 +16,7 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
       uint32_t convWidth, uint32_t convHeight)
 {
     // My contribution: preprocessor pragmas:
-    // We have access to 2 AXI4 buses, we only use one here for now.
+    // We have access to 2 AXI4 buses
     #pragma HLS INTERFACE m_axi port=input offset=slave bundle=gmem0
     #pragma HLS INTERFACE m_axi port=output offset=slave bundle=gmem0
     #pragma HLS INTERFACE m_axi port=coeffs offset=slave bundle=gmem1
@@ -30,9 +30,12 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
     #pragma HLS INTERFACE s_axilite port=return
 
     TFXP filterCoeffs[MAX_CHANNELS][MAX_CONV_H][MAX_CONV_W];
-    // Add array partitioning pragmas here
+    TFXP inputRows[MAX_INPUT_WIDTH];
+    // Array partitioning, for now complete, maybe change to cyclic?
     #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=2
     #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=3
+
+    #pragma HLS ARRAY_PARTITION variable=inputRows complete dim=0
 
     // Outer loop over filters: for each filter, first cache its coefficients,
     // then convolve the full input using those cached coefficients.
@@ -53,6 +56,8 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
         }
 
         // Step 2: Convolve the input with the cached coefficients and write output
+        // Step 4: Parallelize the computation of output filters
+        // -> flatten loop_convolve_x and loop_convolve_y if enough space?
         loop_convolve_y : for (uint32_t y = 0; y < (inputHeight - 2); ++y) {
             loop_convolve_x : for (uint32_t x = 0; x < (inputWidth - 2); ++x) {
                 TFXP acc = 0;
@@ -77,6 +82,5 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                          + x) = acc;
             }
         }
-
     } // end loop_filters
 }
