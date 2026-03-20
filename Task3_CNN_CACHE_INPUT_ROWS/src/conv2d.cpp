@@ -1,4 +1,4 @@
-//My contribution:
+// My contribution:
 #include "conv2d.hpp"
 
 inline TFXP FXP_Mult(TFXP a, TFXP b, uint32_t decimalBits = DECIMALS)
@@ -30,18 +30,22 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
     #pragma HLS INTERFACE s_axilite port=return
 
     TFXP filterCoeffs[MAX_CHANNELS][MAX_CONV_H][MAX_CONV_W];
-    TFXP inputRows[MAX_INPUT_WIDTH];
+
     // Array partitioning, for now complete, maybe change to cyclic?
+    // dim=2 for y, dim=3 for x
     #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=2
     #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=3
 
-    #pragma HLS ARRAY_PARTITION variable=inputRows complete dim=0
+
+    TFXP rowBuffer[MAX_CONV_H][MAX_CHANNELS][MAX_INPUT_WIDTH];
+
+    #pragma HLS ARRAY_PARTITION variable=rowBuffer complete dim=1
 
     // Outer loop over filters: for each filter, first cache its coefficients,
     // then convolve the full input using those cached coefficients.
     loop_filters : for (uint32_t iFilter = 0; iFilter < numFilters; ++iFilter) {
 
-        // Step 1: Load this filter's coefficients into the local cache
+        // Load this filter's coefficients into the local cache (Task 2)
         loop_load_channels : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
             loop_load_coef_y : for (uint32_t y = 0; y < convHeight; ++y) {
                 loop_load_coef_x : for (uint32_t x = 0; x < convWidth; ++x) {
@@ -55,15 +59,41 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
             }
         }
 
-        // Step 2: Convolve the input with the cached coefficients and write output
-        // Step 4: Parallelize the computation of output filters
-        // -> flatten loop_convolve_x and loop_convolve_y if enough space?
+        // Load the first 2 input rows before convolution loops (Task 3)
+        loop_load_rows_y : for (uint32_t y = 0; y < convHeight - 1; ++y) { // first 2 rows
+            loop_load_rows_x : for (uint32_t x = 0; x < inputWidth; ++x) {
+                loop_load_channels : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
+                    rowBuffer[y][iChannel][x] = *(input+iChannel*inputWidth*inputHeight
+                                                + y*inputWidth
+                                                + x);
+                }
+            }
+        }
+
+        // Convolve the input with the cached coefficients and write output (Task 3)
         loop_convolve_y : for (uint32_t y = 0; y < (inputHeight - 2); ++y) {
+            // Load the next input row before the loops start
+            // New row at y + convHeight - 1 (= y + 2)
+            uint32_t newRow = y + convHeight - 1;
+
+            // Only need 3 rows for next loops, cycle throûgh the slots
+            uint32_t rowSlot = newRow % convHeight;
+
+            loop_load_row_ch : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
+                loop_load_row_x : for (uint32_t x = 0; x < inputWidth; ++x) {
+                    #pragma HLS PIPELINE II=1
+                    rowBuffer[rowSlot][iChannel][x] = *(input+iChannel*inputWidth*inputHeight
+                                                    + newRow*inputWidth
+                                                    + x);
+                }
+            }
+
             loop_convolve_x : for (uint32_t x = 0; x < (inputWidth - 2); ++x) {
                 TFXP acc = 0;
 
                 loop_acc_channels : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
                     loop_acc_y : for (uint32_t cy = 0; cy < convHeight; ++cy) {
+                        // @TODO !!!!! Seperate into two loops here
                         loop_acc_x : for (uint32_t cx = 0; cx < convWidth; ++cx) {
                             #pragma HLS PIPELINE II=1
                             TFXP pixelValue, coeffValue;
