@@ -5,6 +5,7 @@ inline TFXP FXP_Mult(TFXP a, TFXP b, uint32_t decimalBits = DECIMALS)
 {
     //return a*b;
     // We need a wider data type to correctly capture the result of the multiplication.
+    #pragma HLS bind_op variable=res op=*
     TFXP_MULT res = (TFXP_MULT)a * (TFXP_MULT)b;
     res = res >> decimalBits;
     return res;
@@ -46,9 +47,11 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
     loop_filters : for (uint32_t iFilter = 0; iFilter < numFilters; ++iFilter) {
 
         // Load this filter's coefficients into the local cache (Task 2)
-        loop_load_channels : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
+        loop_load_coeffs : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
             loop_load_coef_y : for (uint32_t y = 0; y < convHeight; ++y) {
                 loop_load_coef_x : for (uint32_t x = 0; x < convWidth; ++x) {
+                    // 3 perfectly nested loops, can flatten
+                    #pragma HLS loop_flatten
                     #pragma HLS PIPELINE II=1
                     filterCoeffs[iChannel][y][x] = *(coeffs
                                                     + iFilter*numChannels*convHeight*convWidth
@@ -63,6 +66,9 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
         loop_load_rows_y : for (uint32_t y = 0; y < convHeight - 1; ++y) { // first 2 rows
             loop_load_rows_x : for (uint32_t x = 0; x < inputWidth; ++x) {
                 loop_load_channels : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
+                    // 3 perfectly nested loops, can flatten
+                    #pragma HLS loop_flatten
+                    #pragma HLS PIPELINE II=1
                     rowBuffer[y][iChannel][x] = *(input+iChannel*inputWidth*inputHeight
                                                 + y*inputWidth
                                                 + x);
@@ -81,6 +87,8 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
 
             loop_load_row_ch : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
                 loop_load_row_x : for (uint32_t x = 0; x < inputWidth; ++x) {
+                    // loop_load_ch and loop_load_row_x perfectly nested, can flatten
+                    #pragma HLS loop_flatten
                     #pragma HLS PIPELINE II=1
                     rowBuffer[rowSlot][iChannel][x] = *(input+iChannel*inputWidth*inputHeight
                                                     + newRow*inputWidth
@@ -93,14 +101,17 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
 
                 loop_acc_channels : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
                     loop_acc_y : for (uint32_t cy = 0; cy < convHeight; ++cy) {
-                        // @TODO !!!!! Seperate into two loops here
+                        // Can we do better here?
+                        #pragma HLS loop_flatten
+
+                        rowSlot = (y + cy) % MAX_CONV_H;
+
                         loop_acc_x : for (uint32_t cx = 0; cx < convWidth; ++cx) {
-                            #pragma HLS PIPELINE II=1
+                            // Timing violation: we have a negative Slack in Vitis HLS, might need to increase II
+                            #pragma HLS PIPELINE II=2
                             TFXP pixelValue, coeffValue;
                             coeffValue = filterCoeffs[iChannel][cy][cx];
-                            pixelValue = *(input+iChannel*inputWidth*inputHeight
-                                                + (y+cy)*inputWidth
-                                                + (x+cx));
+                            pixelValue = rowBuffer[rowSlot][iChannel][x+cx];
                             acc += FXP_Mult(coeffValue, pixelValue, DECIMALS);
                         }
                     }
@@ -110,7 +121,7 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                 *(output + iFilter * (inputHeight - 2) * (inputWidth - 2)
                          + y * (inputWidth - 2)
                          + x) = acc;
-            }
-        }
+            } // end loop_convolve_x
+        } // end loop_convolve_y
     } // end loop_filters
 }
