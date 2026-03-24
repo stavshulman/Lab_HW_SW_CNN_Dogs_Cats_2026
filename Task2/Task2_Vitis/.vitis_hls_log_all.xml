@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vivadoHLSLog:LogRoot xmlns:vivadoHLSLog="www.xilinx.com/vivadoHLSLog">
+  <errorLogs>
+    <logs>
+      <synLog/>
+      <simLog/>
+      <mgLog/>
+      <packageLog/>
+      <csimLog/>
+    </logs>
+  </errorLogs>
+  <warningLogs>
+    <logs>
+      <synLog>
+        <logs message="WARNING: [RTGEN 206-101] Design contains AXI ports. Reset is fixed to synchronous and active low." projectName="Task2_Vitis" solutionName="solution1" date="2026-03-24T17:13:58.871+0100" type="Warning"/>
+        <logs message="WARNING: [HLS 200-1016] The critical path in module 'Conv2D_HW_Pipeline_loop_acc_x' consists of the following:&#x9;'load' operation ('cx_load', src/conv2d.cpp:62) on local variable 'cx' [68]  (0 ns)&#xD;&#xA;&#x9;'icmp' operation ('icmp_ln62', src/conv2d.cpp:62) [82]  (2.47 ns)&#xD;&#xA;&#x9;'select' operation ('select_ln60_5', src/conv2d.cpp:60) [83]  (0.993 ns)&#xD;&#xA;&#x9;'or' operation ('or_ln58_1', src/conv2d.cpp:58) [87]  (0 ns)&#xD;&#xA;&#x9;'select' operation ('select_ln58', src/conv2d.cpp:58) [88]  (0.978 ns)&#xD;&#xA;&#x9;'add' operation ('add_ln62', src/conv2d.cpp:62) [144]  (2.55 ns)&#xD;&#xA;&#x9;'store' operation ('cx_write_ln62', src/conv2d.cpp:62) of variable 'add_ln62', src/conv2d.cpp:62 on local variable 'cx' [151]  (1.59 ns)&#xD;&#xA;&#xA;&#xD;&#xA;Resolution: For help on HLS 200-1016 see www.xilinx.com/cgi-bin/docs/rdoc?v=2022.2;t=hls+guidance;d=200-1016.html" projectName="Task2_Vitis" solutionName="solution1" date="2026-03-24T17:13:57.842+0100" type="Warning"/>
+        <logs message="WARNING: [HLS 200-871] Estimated clock period (8.584ns) exceeds the target (target clock period: 10ns, clock uncertainty: 2.7ns, effective delay budget: 7.3ns).&#xD;&#xA;Resolution: For help on HLS 200-871 see www.xilinx.com/cgi-bin/docs/rdoc?v=2022.2;t=hls+guidance;d=200-871.html" projectName="Task2_Vitis" solutionName="solution1" date="2026-03-24T17:13:57.836+0100" type="Warning"/>
+        <logs message="WARNING: [HLS 200-1016] The critical path in module 'Conv2D_HW_Pipeline_loop_load_coef_x' consists of the following:&#x9;'load' operation ('x_load', src/conv2d.cpp:44) on local variable 'x' [61]  (0 ns)&#xD;&#xA;&#x9;'icmp' operation ('icmp_ln44', src/conv2d.cpp:44) [75]  (2.47 ns)&#xD;&#xA;&#x9;'select' operation ('select_ln42_4', src/conv2d.cpp:42) [76]  (0.993 ns)&#xD;&#xA;&#x9;'or' operation ('or_ln43_1', src/conv2d.cpp:43) [80]  (0 ns)&#xD;&#xA;&#x9;'select' operation ('select_ln43', src/conv2d.cpp:43) [81]  (0.978 ns)&#xD;&#xA;&#x9;'add' operation ('add_ln44', src/conv2d.cpp:44) [158]  (2.55 ns)&#xD;&#xA;&#x9;'store' operation ('x_write_ln44', src/conv2d.cpp:44) of variable 'add_ln44', src/conv2d.cpp:44 on local variable 'x' [165]  (1.59 ns)&#xD;&#xA;&#xD;&#xA;Resolution: For help on HLS 200-1016 see www.xilinx.com/cgi-bin/docs/rdoc?v=2022.2;t=hls+guidance;d=200-1016.html" projectName="Task2_Vitis" solutionName="solution1" date="2026-03-24T17:13:57.621+0100" type="Warning"/>
+        <logs message="WARNING: [HLS 200-871] Estimated clock period (8.584ns) exceeds the target (target clock period: 10ns, clock uncertainty: 2.7ns, effective delay budget: 7.3ns).&#xD;&#xA;Resolution: For help on HLS 200-871 see www.xilinx.com/cgi-bin/docs/rdoc?v=2022.2;t=hls+guidance;d=200-871.html" projectName="Task2_Vitis" solutionName="solution1" date="2026-03-24T17:13:57.610+0100" type="Warning"/>
+        <logs message="WARNING: [HLS 200-960] Cannot flatten loop 'loop_filters' (src/conv2d.cpp:39:31) in function 'Conv2D_HW' more than one sub loop.&#xD;&#xA;Resolution: For help on HLS 200-960 see www.xilinx.com/cgi-bin/docs/rdoc?v=2022.2;t=hls+guidance;d=200-960.html" projectName="Task2_Vitis" solutionName="solution1" date="2026-03-24T17:13:57.437+0100" type="Warning"/>
+        <logs message="WARNING: [HLS 200-960] Cannot flatten loop 'loop_convolve_y' (src/conv2d.cpp:56:41) in function 'Conv2D_HW' the outer loop is not a perfect loop because there is nontrivial logic in the loop latch.&#xD;&#xA;Resolution: For help on HLS 200-960 see www.xilinx.com/cgi-bin/docs/rdoc?v=2022.2;t=hls+guidance;d=200-960.html" projectName="Task2_Vitis" solutionName="solution1" date="2026-03-24T17:13:57.433+0100" type="Warning"/>
+        <logs message="WARNING: [HLS 200-960] Cannot flatten loop 'loop_convolve_x' (src/conv2d.cpp:57:45) in function 'Conv2D_HW' the outer loop is not a perfect loop because there is nontrivial logic in the loop latch.&#xD;&#xA;Resolution: For help on HLS 200-960 see www.xilinx.com/cgi-bin/docs/rdoc?v=2022.2;t=hls+guidance;d=200-960.html" projectName="Task2_Vitis" solutionName="solution1" date="2026-03-24T17:13:57.414+0100" type="Warning"/>
+      </synLog>
+      <simLog/>
+      <mgLog/>
+      <packageLog/>
+      <csimLog/>
+    </logs>
+  </warningLogs>
+</vivadoHLSLog:LogRoot>

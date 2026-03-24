@@ -1,0 +1,180 @@
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2022.2 (64-bit)
+Tool Version Limit: 2019.12
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+==============================================================
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 10ns.
+INFO: [HLS 200-1611] Setting target device to 'xc7z020i-clg400-1L'
+INFO: [HLS 200-1505] Using flow_target 'vivado'
+INFO: [HLS 200-1510] Running: set_part xc7z020iclg400-1L 
+INFO: [HLS 200-1510] Running: create_clock -period 10 -name default 
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 10ns.
+INFO: [HLS 200-1510] Running: csim_design -quiet 
+INFO: [SIM 211-2] *************** CSIM start ***************
+INFO: [SIM 211-4] CSIM will launch GCC as the compiler.
+INFO: [SIM 211-1] CSim done with 0 errors.
+INFO: [SIM 211-3] *************** CSIM finish ***************
+INFO: [HLS 200-111] Finished Command csim_design CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 4.658 seconds; current allocated memory: 0.492 MB.
+INFO: [HLS 200-112] Total CPU user time: 1 seconds. Total CPU system time: 1 seconds. Total elapsed time: 15.89 seconds; peak allocated memory: 105.133 MB.
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2022.2 (64-bit)
+Tool Version Limit: 2019.12
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+==============================================================
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 10ns.
+INFO: [HLS 200-1611] Setting target device to 'xc7z020i-clg400-1L'
+INFO: [HLS 200-1505] Using flow_target 'vivado'
+INFO: [HLS 200-1510] Running: set_part xc7z020iclg400-1L 
+INFO: [HLS 200-1510] Running: create_clock -period 10 -name default 
+INFO: [HLS 200-1510] Running: csynth_design 
+INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 10.053 seconds; current allocated memory: 104.473 MB.
+INFO: [HLS 200-10] Analyzing design file 'src/conv2d.cpp' ... 
+INFO: [HLS 200-111] Finished Source Code Analysis and Preprocessing: CPU user time: 0 seconds. CPU system time: 1 seconds. Elapsed time: 6.392 seconds; current allocated memory: 105.727 MB.
+INFO: [HLS 200-777] Using interface defaults for 'Vivado' flow target.
+INFO: [HLS 214-178] Inlining function 'FXP_Mult(int, int, unsigned int)' into 'Conv2D_HW(int*, int*, int*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int)' (src/conv2d.cpp:17:0)
+INFO: [HLS 214-248] Applying array_partition to 'filterCoeffs': Complete partitioning on dimension 2. Complete partitioning on dimension 3. (src/conv2d.cpp:32:7)
+INFO: [HLS 214-115] Multiple burst reads of variable length and bit width 32 in loop 'loop_load_coef_x'(src/conv2d.cpp:44:36) has been inferred on bundle 'gmem1'. These burst requests might be further partitioned into multiple requests during RTL generation, based on max_read_burst_length or max_write_burst_length settings. (src/conv2d.cpp:44:36)
+INFO: [HLS 214-115] Multiple burst writes of variable length and bit width 32 in loop 'loop_convolve_x'(src/conv2d.cpp:57:31) has been inferred on bundle 'gmem0'. These burst requests might be further partitioned into multiple requests during RTL generation, based on max_read_burst_length or max_write_burst_length settings. (src/conv2d.cpp:57:31)
+INFO: [HLS 214-115] Multiple burst reads of variable length and bit width 32 in loop 'loop_acc_x'(src/conv2d.cpp:62:38) has been inferred on bundle 'gmem0'. These burst requests might be further partitioned into multiple requests during RTL generation, based on max_read_burst_length or max_write_burst_length settings. (src/conv2d.cpp:62:38)
+INFO: [HLS 200-111] Finished Compiling Optimization and Transform: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 4.328 seconds; current allocated memory: 106.766 MB.
+INFO: [HLS 200-111] Finished Checking Pragmas: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.003 seconds; current allocated memory: 106.766 MB.
+INFO: [HLS 200-10] Starting code transformations ...
+INFO: [HLS 200-111] Finished Standard Transforms: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 113.250 MB.
+INFO: [HLS 200-10] Checking synthesizability ...
+INFO: [HLS 200-111] Finished Checking Synthesizability: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.014 seconds; current allocated memory: 114.711 MB.
+INFO: [HLS 200-111] Finished Loop, function and other optimizations: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.068 seconds; current allocated memory: 136.840 MB.
+INFO: [XFORM 203-541] Flattening a loop nest 'loop_load_coef_y' (src/conv2d.cpp:43:46) in function 'Conv2D_HW'.
+INFO: [XFORM 203-541] Flattening a loop nest 'loop_load_channels' (src/conv2d.cpp:42:44) in function 'Conv2D_HW'.
+INFO: [XFORM 203-541] Flattening a loop nest 'loop_acc_y' (src/conv2d.cpp:58:22) in function 'Conv2D_HW'.
+INFO: [XFORM 203-541] Flattening a loop nest 'loop_acc_channels' (src/conv2d.cpp:58:22) in function 'Conv2D_HW'.
+WARNING: [HLS 200-960] Cannot flatten loop 'loop_convolve_x' (src/conv2d.cpp:57:45) in function 'Conv2D_HW' the outer loop is not a perfect loop because there is nontrivial logic in the loop latch.
+WARNING: [HLS 200-960] Cannot flatten loop 'loop_convolve_y' (src/conv2d.cpp:56:41) in function 'Conv2D_HW' the outer loop is not a perfect loop because there is nontrivial logic in the loop latch.
+WARNING: [HLS 200-960] Cannot flatten loop 'loop_filters' (src/conv2d.cpp:39:31) in function 'Conv2D_HW' more than one sub loop.
+INFO: [HLS 200-472] Inferring partial write operation for 'filterCoeffs' (src/conv2d.cpp:46:31)
+INFO: [HLS 200-111] Finished Architecture Synthesis: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.088 seconds; current allocated memory: 149.008 MB.
+INFO: [HLS 200-10] Starting hardware synthesis ...
+INFO: [HLS 200-10] Synthesizing 'Conv2D_HW' ...
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'Conv2D_HW_Pipeline_loop_load_coef_x' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'loop_load_channels_loop_load_coef_y_loop_load_coef_x'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 16, loop 'loop_load_channels_loop_load_coef_y_loop_load_coef_x'
+WARNING: [HLS 200-871] Estimated clock period (8.584ns) exceeds the target (target clock period: 10ns, clock uncertainty: 2.7ns, effective delay budget: 7.3ns).
+WARNING: [HLS 200-1016] The critical path in module 'Conv2D_HW_Pipeline_loop_load_coef_x' consists of the following:	'load' operation ('x_load', src/conv2d.cpp:44) on local variable 'x' [61]  (0 ns)
+	'icmp' operation ('icmp_ln44', src/conv2d.cpp:44) [75]  (2.47 ns)
+	'select' operation ('select_ln42_4', src/conv2d.cpp:42) [76]  (0.993 ns)
+	'or' operation ('or_ln43_1', src/conv2d.cpp:43) [80]  (0 ns)
+	'select' operation ('select_ln43', src/conv2d.cpp:43) [81]  (0.978 ns)
+	'add' operation ('add_ln44', src/conv2d.cpp:44) [158]  (2.55 ns)
+	'store' operation ('x_write_ln44', src/conv2d.cpp:44) of variable 'add_ln44', src/conv2d.cpp:44 on local variable 'x' [165]  (1.59 ns)
+
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.152 seconds; current allocated memory: 154.988 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.074 seconds; current allocated memory: 156.266 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'Conv2D_HW_Pipeline_loop_acc_x' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'loop_acc_channels_loop_acc_y_loop_acc_x'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 19, loop 'loop_acc_channels_loop_acc_y_loop_acc_x'
+WARNING: [HLS 200-871] Estimated clock period (8.584ns) exceeds the target (target clock period: 10ns, clock uncertainty: 2.7ns, effective delay budget: 7.3ns).
+WARNING: [HLS 200-1016] The critical path in module 'Conv2D_HW_Pipeline_loop_acc_x' consists of the following:	'load' operation ('cx_load', src/conv2d.cpp:62) on local variable 'cx' [68]  (0 ns)
+	'icmp' operation ('icmp_ln62', src/conv2d.cpp:62) [82]  (2.47 ns)
+	'select' operation ('select_ln60_5', src/conv2d.cpp:60) [83]  (0.993 ns)
+	'or' operation ('or_ln58_1', src/conv2d.cpp:58) [87]  (0 ns)
+	'select' operation ('select_ln58', src/conv2d.cpp:58) [88]  (0.978 ns)
+	'add' operation ('add_ln62', src/conv2d.cpp:62) [144]  (2.55 ns)
+	'store' operation ('cx_write_ln62', src/conv2d.cpp:62) of variable 'add_ln62', src/conv2d.cpp:62 on local variable 'cx' [151]  (1.59 ns)
+
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.141 seconds; current allocated memory: 157.430 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.094 seconds; current allocated memory: 157.633 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'Conv2D_HW' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.124 seconds; current allocated memory: 158.191 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.098 seconds; current allocated memory: 158.652 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'Conv2D_HW_Pipeline_loop_load_coef_x' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'Conv2D_HW_Pipeline_loop_load_coef_x' pipeline 'loop_load_channels_loop_load_coef_y_loop_load_coef_x' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 4 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'Conv2D_HW_Pipeline_loop_load_coef_x'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.149 seconds; current allocated memory: 161.648 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'Conv2D_HW_Pipeline_loop_acc_x' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'Conv2D_HW_Pipeline_loop_acc_x' pipeline 'loop_acc_channels_loop_acc_y_loop_acc_x' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 6 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_52_2_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mux_32_32_1_1': 4 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'Conv2D_HW_Pipeline_loop_acc_x'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.277 seconds; current allocated memory: 166.660 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'Conv2D_HW' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+WARNING: [RTGEN 206-101] Design contains AXI ports. Reset is fixed to synchronous and active low.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/gmem0' to 'm_axi'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/gmem1' to 'm_axi'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/input_r' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/output_r' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/coeffs' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/numChannels' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/numFilters' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/inputWidth' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/inputHeight' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/convWidth' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'Conv2D_HW/convHeight' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on function 'Conv2D_HW' to 's_axilite & ap_ctrl_hs'.
+INFO: [RTGEN 206-100] Bundling port 'input_r', 'output_r', 'coeffs', 'numChannels', 'numFilters', 'inputWidth', 'inputHeight', 'convWidth', 'convHeight' to AXI-Lite port control.
+INFO: [RTGEN 206-100] Generating core module 'mul_32ns_32ns_64_2_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_32ns_64ns_96_5_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_32s_32s_32_2_1': 5 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'Conv2D_HW'.
+INFO: [RTMG 210-278] Implementing memory 'Conv2D_HW_filterCoeffs_RAM_AUTO_1R1W' using auto RAMs.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.33 seconds; current allocated memory: 172.156 MB.
+INFO: [HLS 200-111] Finished Generating all RTL models: CPU user time: 1 seconds. CPU system time: 0 seconds. Elapsed time: 0.537 seconds; current allocated memory: 177.594 MB.
+INFO: [HLS 200-1603] Design has inferred MAXI bursts and missed bursts, see Vitis HLS GUI synthesis summary report for detailed information.
+INFO: [HLS 200-111] Finished Updating report files: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.541 seconds; current allocated memory: 185.852 MB.
+INFO: [VHDL 208-304] Generating VHDL RTL for Conv2D_HW.
+INFO: [VLOG 209-307] Generating Verilog RTL for Conv2D_HW.
+INFO: [HLS 200-790] **** Loop Constraint Status: All loop constraints were satisfied.
+INFO: [HLS 200-789] **** Estimated Fmax: 116.50 MHz
+INFO: [HLS 200-111] Finished Command csynth_design CPU user time: 2 seconds. CPU system time: 1 seconds. Elapsed time: 13.464 seconds; current allocated memory: 81.387 MB.
+INFO: [HLS 200-112] Total CPU user time: 3 seconds. Total CPU system time: 1 seconds. Total elapsed time: 24.424 seconds; peak allocated memory: 185.902 MB.
+==============================================================
+Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2022.2 (64-bit)
+Tool Version Limit: 2019.12
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+==============================================================
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 10ns.
+INFO: [HLS 200-1611] Setting target device to 'xc7z020i-clg400-1L'
+INFO: [HLS 200-1505] Using flow_target 'vivado'
+INFO: [HLS 200-1464] Running solution command: config_export -output=C:/Users/stavs/Documents/Lab_HW_SW/Midterm_V2/CNN_PROJECT/Conv2D_HW_InitVersion/Lab_HW_SW_CNN_Dogs_Cats_2026/Task2
+INFO: [HLS 200-1510] Running: set_part xc7z020iclg400-1L 
+INFO: [HLS 200-1510] Running: create_clock -period 10 -name default 
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 10ns.
+INFO: [HLS 200-1510] Running: config_export -output C:/Users/stavs/Documents/Lab_HW_SW/Midterm_V2/CNN_PROJECT/Conv2D_HW_InitVersion/Lab_HW_SW_CNN_Dogs_Cats_2026/Task2 
+INFO: [HLS 200-1510] Running: export_design -rtl verilog -format ip_catalog -output C:/Users/stavs/Documents/Lab_HW_SW/Midterm_V2/CNN_PROJECT/Conv2D_HW_InitVersion/Lab_HW_SW_CNN_Dogs_Cats_2026/Task2 
+INFO: [IMPL 213-8] Exporting RTL as a Vivado IP.
+INFO: [HLS 200-802] Generated output file export.zip
+INFO: [HLS 200-111] Finished Command export_design CPU user time: 1 seconds. CPU system time: 1 seconds. Elapsed time: 5.906 seconds; current allocated memory: 9.539 MB.
+INFO: [HLS 200-112] Total CPU user time: 2 seconds. Total CPU system time: 1 seconds. Total elapsed time: 16.831 seconds; peak allocated memory: 115.961 MB.

@@ -1,0 +1,63 @@
+<xilinx:hls_fe_msgs>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="C:/Xilinx/Vitis_HLS/2022.2/common/technology/autopilot\ap_int_ref.h:678:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="and_reduce" ARG_PragmaIsValid="1" ARG_PragmaType="unroll" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="C:/Xilinx/Vitis_HLS/2022.2/common/technology/autopilot\ap_int_ref.h:692:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="or_reduce" ARG_PragmaIsValid="1" ARG_PragmaType="unroll" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="C:/Xilinx/Vitis_HLS/2022.2/common/technology/autopilot\ap_int_ref.h:706:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="xor_reduce" ARG_PragmaIsValid="1" ARG_PragmaType="unroll" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="C:/Users/stavs/Documents/Lab_HW_SW/Midterm_V2/CNN_PROJECT/Conv2D_HW_InitVersion/Lab_HW_SW_CNN_Dogs_Cats_2026/Task2/Task2_Vitis/solution1/csynth.tcl:15:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaContext="directive" ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="name=Conv2D_HW" ARG_PragmaType="top" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:20:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="m_axi port=input offset=slave bundle=gmem0" ARG_PragmaType="interface" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:21:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="m_axi port=output offset=slave bundle=gmem0" ARG_PragmaType="interface" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:22:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="m_axi port=coeffs offset=slave bundle=gmem1" ARG_PragmaType="interface" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:24:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="s_axilite port=numFilters" ARG_PragmaType="interface" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:25:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="s_axilite port=numChannels" ARG_PragmaType="interface" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:26:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="s_axilite port=inputWidth" ARG_PragmaType="interface" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:27:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="s_axilite port=inputHeight" ARG_PragmaType="interface" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:28:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="s_axilite port=convWidth" ARG_PragmaType="interface" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:29:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="s_axilite port=convHeight" ARG_PragmaType="interface" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:30:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="s_axilite port=return" ARG_PragmaType="interface" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:34:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="variable=filterCoeffs complete dim=2" ARG_PragmaType="array_partition" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:35:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="variable=filterCoeffs complete dim=3" ARG_PragmaType="array_partition" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:45:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="II=1" ARG_PragmaType="pipeline" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-5471" msg_severity="WARNING" msg_loc="src/conv2d.cpp:63:9" msg_body="HLS pragma dump">
+        <args ARG_PragmaFunction="Conv2D_HW" ARG_PragmaIsValid="1" ARG_PragmaOptions="II=1" ARG_PragmaType="pipeline" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_INLINE" msg_id="214-178" msg_severity="INFO" msg_loc="src/conv2d.cpp:17:0" msg_body="Inlining function 'FXP_Mult(int, int, unsigned int)' into 'Conv2D_HW(int*, int*, int*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int)'">
+        <args Callee="FXP_Mult(int, int, unsigned int)" Caller="Conv2D_HW(int*, int*, int*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int)"/>
+    </msg>
+    <msg msg_groups="PRAGMA_MISC" msg_id="214-248" msg_severity="INFO" msg_loc="src/conv2d.cpp:32:7" msg_body="Applying array_partition to 'filterCoeffs': Complete partitioning on dimension 2. Complete partitioning on dimension 3.">
+        <args Dim="islist 2 3" Mode="islist Complete Complete" UOName="filterCoeffs"/>
+    </msg>
+</xilinx:hls_fe_msgs>
+

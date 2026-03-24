@@ -1,0 +1,20 @@
+INFO: [SIM 2] *************** CSIM start ***************
+INFO: [SIM 4] CSIM will launch GCC as the compiler.
+   Compiling ../../../../src/conv2DTestbench.cpp in debug mode
+   Compiling ../../../../src/conv2d.cpp in debug mode
+   Generating csim.exe
+Evaluating execution for 3  --> 32 
+  SW
+  HW
+  --> OK!
+Evaluating execution for 16  --> 16 
+  SW
+  HW
+  --> OK!
+Evaluating execution for 32  --> 32 
+  SW
+  HW
+  --> OK!
+
+INFO: [SIM 1] CSim done with 0 errors.
+INFO: [SIM 3] *************** CSIM finish ***************

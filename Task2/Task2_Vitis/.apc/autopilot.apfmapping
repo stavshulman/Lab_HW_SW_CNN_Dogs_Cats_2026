@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<autopilotfilemapping:AutoPilotFileMapping xmlns:autopilotfilemapping="www.autoesl.com/autopilotfilemapping">
+  <source>
+    <originFiles name="conv2d.cpp" path="C:\Users\stavs\Documents\Lab_HW_SW\Midterm_V2\CNN_PROJECT\Conv2D_HW_InitVersion\Lab_HW_SW_CNN_Dogs_Cats_2026\Task2\src\conv2d.cpp"/>
+    <originFiles name="conv2d.hpp" path="C:\Users\stavs\Documents\Lab_HW_SW\Midterm_V2\CNN_PROJECT\Conv2D_HW_InitVersion\Lab_HW_SW_CNN_Dogs_Cats_2026\Task2\src\conv2d.hpp"/>
+  </source>
+  <testbench>
+    <originFiles name="conv2DTestbench.cpp" path="C:\Users\stavs\Documents\Lab_HW_SW\Midterm_V2\CNN_PROJECT\Conv2D_HW_InitVersion\Lab_HW_SW_CNN_Dogs_Cats_2026\Task2\src\conv2DTestbench.cpp"/>
+  </testbench>
+</autopilotfilemapping:AutoPilotFileMapping>

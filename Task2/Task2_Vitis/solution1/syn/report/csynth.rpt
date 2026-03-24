@@ -1,0 +1,247 @@
+
+
+================================================================
+== Synthesis Summary Report of 'Conv2D_HW'
+================================================================
++ General Information: 
+    * Date:           Tue Mar 24 17:13:59 2026
+    * Version:        2022.2 (Build 3670227 on Oct 13 2022)
+    * Project:        Task2_Vitis
+    * Solution:       solution1 (Vivado IP Flow Target)
+    * Product family: zynq
+    * Target device:  xc7z020i-clg400-1L
+    
+
++ Performance & Resource Estimates: 
+    
+    PS: '+' for module; 'o' for loop; '*' for dataflow
+    +-----------------------------------------------------------+--------+-------+---------+--------+----------+---------+------+----------+--------+----------+-----------+------------+-----+
+    |                          Modules                          |  Issue |       | Latency | Latency| Iteration|         | Trip |          |        |          |           |            |     |
+    |                          & Loops                          |  Type  | Slack | (cycles)|  (ns)  |  Latency | Interval| Count| Pipelined|  BRAM  |    DSP   |     FF    |     LUT    | URAM|
+    +-----------------------------------------------------------+--------+-------+---------+--------+----------+---------+------+----------+--------+----------+-----------+------------+-----+
+    |+ Conv2D_HW                                                |  Timing|  -1.28|        -|       -|         -|        -|     -|        no|  9 (3%)|  30 (13%)|  7556 (7%)|  8149 (15%)|    -|
+    | o loop_filters                                            |       -|   7.30|        -|       -|         -|        -|     -|        no|       -|         -|          -|           -|    -|
+    |  + Conv2D_HW_Pipeline_loop_load_coef_x                    |  Timing|  -1.28|        -|       -|         -|        -|     -|        no|       -|         -|  1255 (1%)|   1283 (2%)|    -|
+    |   o loop_load_channels_loop_load_coef_y_loop_load_coef_x  |       -|   7.30|        -|       -|        15|        1|     -|       yes|       -|         -|          -|           -|    -|
+    |  o loop_convolve_y                                        |       -|   7.30|        -|       -|         -|        -|     -|        no|       -|         -|          -|           -|    -|
+    |   o loop_convolve_x                                       |       -|   7.30|        -|       -|         -|        -|     -|        no|       -|         -|          -|           -|    -|
+    |    + Conv2D_HW_Pipeline_loop_acc_x                        |  Timing|  -1.28|        -|       -|         -|        -|     -|        no|       -|    6 (2%)|  1719 (1%)|   1526 (2%)|    -|
+    |     o loop_acc_channels_loop_acc_y_loop_acc_x             |       -|   7.30|        -|       -|        18|        1|     -|       yes|       -|         -|          -|           -|    -|
+    +-----------------------------------------------------------+--------+-------+---------+--------+----------+---------+------+----------+--------+----------+-----------+------------+-----+
+
+
+================================================================
+== HW Interfaces
+================================================================
+* M_AXI
++-------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+
+| Interface   | Data Width | Address Width | Latency | Offset | Register | Max Widen | Max Read     | Max Write    | Num Read    | Num Write   |
+|             | (SW->HW)   |               |         |        |          | Bitwidth  | Burst Length | Burst Length | Outstanding | Outstanding |
++-------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+
+| m_axi_gmem0 | 32 -> 32   | 64            | 0       | slave  | 0        | 0         | 16           | 16           | 16          | 16          |
+| m_axi_gmem1 | 32 -> 32   | 64            | 0       | slave  | 0        | 0         | 16           | 16           | 16          | 16          |
++-------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+
+
+* S_AXILITE Interfaces
++---------------+------------+---------------+--------+----------+
+| Interface     | Data Width | Address Width | Offset | Register |
++---------------+------------+---------------+--------+----------+
+| s_axi_control | 32         | 7             | 16     | 0        |
++---------------+------------+---------------+--------+----------+
+
+* S_AXILITE Registers
++---------------+-------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+| Interface     | Register    | Offset | Width | Access | Description                      | Bit Fields                                                           |
++---------------+-------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+| s_axi_control | CTRL        | 0x00   | 32    | RW     | Control signals                  | 0=AP_START 1=AP_DONE 2=AP_IDLE 3=AP_READY 7=AUTO_RESTART 9=INTERRUPT |
+| s_axi_control | GIER        | 0x04   | 32    | RW     | Global Interrupt Enable Register | 0=Enable                                                             |
+| s_axi_control | IP_IER      | 0x08   | 32    | RW     | IP Interrupt Enable Register     | 0=CHAN0_INT_EN 1=CHAN1_INT_EN                                        |
+| s_axi_control | IP_ISR      | 0x0c   | 32    | RW     | IP Interrupt Status Register     | 0=CHAN0_INT_ST 1=CHAN1_INT_ST                                        |
+| s_axi_control | input_r_1   | 0x10   | 32    | W      | Data signal of input_r           |                                                                      |
+| s_axi_control | input_r_2   | 0x14   | 32    | W      | Data signal of input_r           |                                                                      |
+| s_axi_control | output_r_1  | 0x1c   | 32    | W      | Data signal of output_r          |                                                                      |
+| s_axi_control | output_r_2  | 0x20   | 32    | W      | Data signal of output_r          |                                                                      |
+| s_axi_control | coeffs_1    | 0x28   | 32    | W      | Data signal of coeffs            |                                                                      |
+| s_axi_control | coeffs_2    | 0x2c   | 32    | W      | Data signal of coeffs            |                                                                      |
+| s_axi_control | numChannels | 0x34   | 32    | W      | Data signal of numChannels       |                                                                      |
+| s_axi_control | numFilters  | 0x3c   | 32    | W      | Data signal of numFilters        |                                                                      |
+| s_axi_control | inputWidth  | 0x44   | 32    | W      | Data signal of inputWidth        |                                                                      |
+| s_axi_control | inputHeight | 0x4c   | 32    | W      | Data signal of inputHeight       |                                                                      |
+| s_axi_control | convWidth   | 0x54   | 32    | W      | Data signal of convWidth         |                                                                      |
+| s_axi_control | convHeight  | 0x5c   | 32    | W      | Data signal of convHeight        |                                                                      |
++---------------+-------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+
+* TOP LEVEL CONTROL
++-----------+------------+-----------+
+| Interface | Type       | Ports     |
++-----------+------------+-----------+
+| ap_clk    | clock      | ap_clk    |
+| ap_rst_n  | reset      | ap_rst_n  |
+| interrupt | interrupt  | interrupt |
+| ap_ctrl   | ap_ctrl_hs |           |
++-----------+------------+-----------+
+
+
+================================================================
+== SW I/O Information
+================================================================
+* Top Function Arguments
++-------------+-----------+--------------+
+| Argument    | Direction | Datatype     |
++-------------+-----------+--------------+
+| input       | inout     | int*         |
+| output      | inout     | int*         |
+| coeffs      | in        | int*         |
+| numChannels | in        | unsigned int |
+| numFilters  | in        | unsigned int |
+| inputWidth  | in        | unsigned int |
+| inputHeight | in        | unsigned int |
+| convWidth   | in        | unsigned int |
+| convHeight  | in        | unsigned int |
++-------------+-----------+--------------+
+
+* SW-to-HW Mapping
++-------------+---------------+-----------+----------+---------------------------------------+
+| Argument    | HW Interface  | HW Type   | HW Usage | HW Info                               |
++-------------+---------------+-----------+----------+---------------------------------------+
+| input       | m_axi_gmem0   | interface |          |                                       |
+| input       | s_axi_control | interface | offset   |                                       |
+| output      | m_axi_gmem0   | interface |          |                                       |
+| output      | s_axi_control | interface | offset   |                                       |
+| coeffs      | m_axi_gmem1   | interface |          |                                       |
+| coeffs      | s_axi_control | register  | offset   | name=coeffs_1 offset=0x28 range=32    |
+| coeffs      | s_axi_control | register  | offset   | name=coeffs_2 offset=0x2c range=32    |
+| numChannels | s_axi_control | register  |          | name=numChannels offset=0x34 range=32 |
+| numFilters  | s_axi_control | register  |          | name=numFilters offset=0x3c range=32  |
+| inputWidth  | s_axi_control | register  |          | name=inputWidth offset=0x44 range=32  |
+| inputHeight | s_axi_control | register  |          | name=inputHeight offset=0x4c range=32 |
+| convWidth   | s_axi_control | register  |          | name=convWidth offset=0x54 range=32   |
+| convHeight  | s_axi_control | register  |          | name=convHeight offset=0x5c range=32  |
++-------------+---------------+-----------+----------+---------------------------------------+
+
+
+================================================================
+== M_AXI Burst Information
+================================================================
+ Note: All burst requests might be further partitioned into multiple requests during RTL generation based on max_read_burst_length or max_write_burst_length settings.
+
+* Inferred Burst Summary
++--------------+------------------+-----------+----------+-------+----------------------+
+| HW Interface | Loop             | Direction | Length   | Width | Location             |
++--------------+------------------+-----------+----------+-------+----------------------+
+| m_axi_gmem1  | loop_load_coef_x | read      | variable | 32    | src/conv2d.cpp:44:36 |
+| m_axi_gmem0  | loop_convolve_x  | write     | variable | 32    | src/conv2d.cpp:57:31 |
+| m_axi_gmem0  | loop_acc_x       | read      | variable | 32    | src/conv2d.cpp:62:38 |
++--------------+------------------+-----------+----------+-------+----------------------+
+
+* Inferred Bursts and Widening Missed
++--------------+----------+------------------+-------------------------------------------------------------------------------------------------------+------------+----------------------+
+| HW Interface | Variable | Loop             | Problem                                                                                               | Resolution | Location             |
++--------------+----------+------------------+-------------------------------------------------------------------------------------------------------+------------+----------------------+
+| m_axi_gmem1  | coeffs   | loop_load_coef_y | Stride is incompatible                                                                                | 214-230    | src/conv2d.cpp:43:32 |
+| m_axi_gmem0  | input    | loop_acc_y       | Stride is incompatible                                                                                | 214-230    | src/conv2d.cpp:61:34 |
+| m_axi_gmem0  | output   | loop_convolve_y  | Stride is incompatible                                                                                | 214-230    | src/conv2d.cpp:56:27 |
+| m_axi_gmem0  | output   | loop_convolve_x  | Could not widen since type i32 size is greater than or equal to the max_widen_bitwidth threshold of 0 | 214-353    | src/conv2d.cpp:57:31 |
+| m_axi_gmem0  | input    | loop_acc_x       | Could not widen since type i32 size is greater than or equal to the max_widen_bitwidth threshold of 0 | 214-353    | src/conv2d.cpp:62:38 |
+| m_axi_gmem1  | coeffs   | loop_load_coef_x | Could not widen since type i32 size is greater than or equal to the max_widen_bitwidth threshold of 0 | 214-353    | src/conv2d.cpp:44:36 |
++--------------+----------+------------------+-------------------------------------------------------------------------------------------------------+------------+----------------------+
+
+    * Resolution URL: www.xilinx.com/cgi-bin/docs/rdoc?v=2022.2;t=hls+guidance;d=XXX-YYY.html (replace XXX-YYY with column value)
+
+================================================================
+== Bind Op Report
+================================================================
++----------------------------------------+-----+--------+--------------+-----+--------+---------+
+| Name                                   | DSP | Pragma | Variable     | Op  | Impl   | Latency |
++----------------------------------------+-----+--------+--------------+-----+--------+---------+
+| + Conv2D_HW                            | 30  |        |              |     |        |         |
+|   sub_fu_375_p2                        | -   |        | sub          | add | fabric | 0       |
+|   sub41_fu_380_p2                      | -   |        | sub41        | add | fabric | 0       |
+|   mul_32s_32s_32_2_1_U59               | 3   |        | mul_ln39     | mul | auto   | 1       |
+|   mul_32ns_32ns_64_2_1_U57             | 3   |        | mul_ln13     | mul | auto   | 1       |
+|   mul_32ns_64ns_96_5_1_U58             | 6   |        | mul_ln13_1   | mul | auto   | 4       |
+|   mul_32s_32s_32_2_1_U62               | -   |        | add_ln39_1   | add | fabric | 0       |
+|   add_ln39_2_fu_404_p2                 | -   |        | add_ln39_2   | add | fabric | 0       |
+|   add_ln39_fu_414_p2                   | -   |        | add_ln39     | add | fabric | 0       |
+|   mul_32s_32s_32_2_1_U61               | 3   |        | empty        | mul | auto   | 1       |
+|   mul_32s_32s_32_2_1_U60               | 3   |        | empty_45     | mul | auto   | 1       |
+|   add_ln56_1_fu_433_p2                 | -   |        | add_ln56_1   | add | fabric | 0       |
+|   add_ln56_2_fu_438_p2                 | -   |        | add_ln56_2   | add | fabric | 0       |
+|   add_ln56_fu_448_p2                   | -   |        | add_ln56     | add | fabric | 0       |
+|   empty_46_fu_458_p2                   | -   |        | empty_46     | add | fabric | 0       |
+|   empty_47_fu_475_p2                   | -   |        | empty_47     | add | fabric | 0       |
+|   add_ln57_fu_517_p2                   | -   |        | add_ln57     | add | fabric | 0       |
+|  + Conv2D_HW_Pipeline_loop_load_coef_x | 0   |        |              |     |        |         |
+|    add_ln43_fu_536_p2                  | -   |        | add_ln43     | add | fabric | 0       |
+|    add_ln43_1_fu_555_p2                | -   |        | add_ln43_1   | add | fabric | 0       |
+|    add_ln42_fu_507_p2                  | -   |        | add_ln42     | add | fabric | 0       |
+|    add_ln42_1_fu_355_p2                | -   |        | add_ln42_1   | add | fabric | 0       |
+|    add_ln43_2_fu_573_p2                | -   |        | add_ln43_2   | add | fabric | 0       |
+|    add_ln43_3_fu_430_p2                | -   |        | add_ln43_3   | add | fabric | 0       |
+|    add_ln43_4_fu_544_p2                | -   |        | add_ln43_4   | add | fabric | 0       |
+|    add_ln43_5_fu_585_p2                | -   |        | add_ln43_5   | add | fabric | 0       |
+|    add_ln43_6_fu_617_p2                | -   |        | add_ln43_6   | add | fabric | 0       |
+|    add_ln44_fu_479_p2                  | -   |        | add_ln44     | add | fabric | 0       |
+|    add_ln43_7_fu_366_p2                | -   |        | add_ln43_7   | add | fabric | 0       |
+|  + Conv2D_HW_Pipeline_loop_acc_x       | 6   |        |              |     |        |         |
+|    empty_40_fu_465_p2                  | -   |        | empty_40     | add | fabric | 0       |
+|    tmp5_fu_599_p2                      | -   |        | tmp5         | add | fabric | 0       |
+|    add_ln60_fu_395_p2                  | -   |        | add_ln60     | add | fabric | 0       |
+|    add_ln60_1_fu_406_p2                | -   |        | add_ln60_1   | add | fabric | 0       |
+|    tmp5_mid1119_fu_617_p2              | -   |        | tmp5_mid1119 | add | fabric | 0       |
+|    add_ln61_fu_507_p2                  | -   |        | add_ln61     | add | fabric | 0       |
+|    p_mid1_fu_532_p2                    | -   |        | p_mid1       | add | fabric | 0       |
+|    mul_32s_32s_32_2_1_U28              | 3   |        | p_mid162     | mul | auto   | 1       |
+|    tmp5_mid1_fu_632_p2                 | -   |        | tmp5_mid1    | add | fabric | 0       |
+|    add_ln58_fu_649_p2                  | -   |        | add_ln58     | add | fabric | 0       |
+|    add_ln58_1_fu_665_p2                | -   |        | add_ln58_1   | add | fabric | 0       |
+|    mul_32s_32s_52_2_1_U33              | 3   |        | res          | mul | auto   | 1       |
+|    acc_1_fu_777_p2                     | -   |        | acc_1        | add | fabric | 0       |
+|    add_ln62_fu_561_p2                  | -   |        | add_ln62     | add | fabric | 0       |
+|    add_ln61_1_fu_425_p2                | -   |        | add_ln61_1   | add | fabric | 0       |
++----------------------------------------+-----+--------+--------------+-----+--------+---------+
+
+
+================================================================
+== Bind Storage Report
+================================================================
++--------------------------+------+------+--------+----------------+---------+------+---------+
+| Name                     | BRAM | URAM | Pragma | Variable       | Storage | Impl | Latency |
++--------------------------+------+------+--------+----------------+---------+------+---------+
+| + Conv2D_HW              | 9    | 0    |        |                |         |      |         |
+|   mul_32s_32s_32_2_1_U59 | 2    | -    |        | filterCoeffs   | ram_1p  | auto | 1       |
+|   mul_32s_32s_32_2_1_U62 | 2    | -    |        | filterCoeffs_1 | ram_1p  | auto | 1       |
+|   filterCoeffs_2_U       | 2    | -    |        | filterCoeffs_2 | ram_1p  | auto | 1       |
+|   filterCoeffs_3_U       | 2    | -    |        | filterCoeffs_3 | ram_1p  | auto | 1       |
+|   mul_32s_32s_32_2_1_U63 | 2    | -    |        | filterCoeffs_4 | ram_1p  | auto | 1       |
+|   filterCoeffs_5_U       | 2    | -    |        | filterCoeffs_5 | ram_1p  | auto | 1       |
+|   filterCoeffs_6_U       | 2    | -    |        | filterCoeffs_6 | ram_1p  | auto | 1       |
+|   filterCoeffs_7_U       | 2    | -    |        | filterCoeffs_7 | ram_1p  | auto | 1       |
+|   filterCoeffs_8_U       | 2    | -    |        | filterCoeffs_8 | ram_1p  | auto | 1       |
++--------------------------+------+------+--------+----------------+---------+------+---------+
+
+
+================================================================
+== Pragma Report
+================================================================
+* Valid Pragma Syntax
++-----------------+---------------------------------------------+----------------------------------------------+
+| Type            | Options                                     | Location                                     |
++-----------------+---------------------------------------------+----------------------------------------------+
+| interface       | m_axi port=input offset=slave bundle=gmem0  | src/conv2d.cpp:20 in conv2d_hw, input        |
+| interface       | m_axi port=output offset=slave bundle=gmem0 | src/conv2d.cpp:21 in conv2d_hw, output       |
+| interface       | m_axi port=coeffs offset=slave bundle=gmem1 | src/conv2d.cpp:22 in conv2d_hw, coeffs       |
+| interface       | s_axilite port=numFilters                   | src/conv2d.cpp:24 in conv2d_hw, numFilters   |
+| interface       | s_axilite port=numChannels                  | src/conv2d.cpp:25 in conv2d_hw, numChannels  |
+| interface       | s_axilite port=inputWidth                   | src/conv2d.cpp:26 in conv2d_hw, inputWidth   |
+| interface       | s_axilite port=inputHeight                  | src/conv2d.cpp:27 in conv2d_hw, inputHeight  |
+| interface       | s_axilite port=convWidth                    | src/conv2d.cpp:28 in conv2d_hw, convWidth    |
+| interface       | s_axilite port=convHeight                   | src/conv2d.cpp:29 in conv2d_hw, convHeight   |
+| interface       | s_axilite port=return                       | src/conv2d.cpp:30 in conv2d_hw, return       |
+| array_partition | variable=filterCoeffs complete dim=2        | src/conv2d.cpp:34 in conv2d_hw, filterCoeffs |
+| array_partition | variable=filterCoeffs complete dim=3        | src/conv2d.cpp:35 in conv2d_hw, filterCoeffs |
+| pipeline        | II=1                                        | src/conv2d.cpp:45 in conv2d_hw               |
+| pipeline        | II=1                                        | src/conv2d.cpp:63 in conv2d_hw               |
++-----------------+---------------------------------------------+----------------------------------------------+
+
+
