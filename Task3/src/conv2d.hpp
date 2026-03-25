@@ -8,12 +8,12 @@
 const uint32_t DECIMALS = 20;
 typedef int32_t TFXP;
 typedef int64_t TFXP_MULT;
-
 // Max values for pragmas
 const uint32_t MAX_CHANNELS = 256;
 const uint32_t MAX_CONV_H   = 3;
 const uint32_t MAX_CONV_W   = 3;
 const uint32_t MAX_INPUT_WIDTH  = 128; // worst case seen in model.h for input width
+const uint32_t MAX_NUM_FILTERS = 256;
 
 // Check if convHeight = 3 is correct in header/cpp file
 void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,

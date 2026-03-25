@@ -1,24 +1,16 @@
-// My contribution:
 #include "conv2d.hpp"
 
-inline TFXP FXP_Mult(TFXP a, TFXP b, uint32_t decimalBits = DECIMALS)
-{
-    //return a*b;
-    // We need a wider data type to correctly capture the result of the multiplication.
-    #pragma HLS bind_op variable=res op=*
+inline TFXP FXP_Mult(TFXP a, TFXP b, uint32_t decimalBits = DECIMALS) {
     TFXP_MULT res = (TFXP_MULT)a * (TFXP_MULT)b;
-    res = res >> decimalBits;
-    return res;
+    return (TFXP)(res >> decimalBits);
 }
 
-void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
-      uint32_t numChannels, uint32_t numFilters,
-      uint32_t inputWidth, uint32_t inputHeight,
-      uint32_t convWidth, uint32_t convHeight)
-{
-    // My contribution: preprocessor pragmas:
-    // We have access to 2 AXI4 buses
-    #pragma HLS INTERFACE m_axi port=input offset=slave bundle=gmem0
+void Conv2D_HW(TFXP *input, TFXP *output, TFXP *coeffs,
+               uint32_t numChannels, uint32_t numFilters,
+               uint32_t inputWidth, uint32_t inputHeight,
+               uint32_t convWidth, uint32_t convHeight) {
+
+    #pragma HLS INTERFACE m_axi port=input  offset=slave bundle=gmem0
     #pragma HLS INTERFACE m_axi port=output offset=slave bundle=gmem0
     #pragma HLS INTERFACE m_axi port=coeffs offset=slave bundle=gmem1
 
@@ -30,98 +22,121 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
     #pragma HLS INTERFACE s_axilite port=convHeight
     #pragma HLS INTERFACE s_axilite port=return
 
-    TFXP filterCoeffs[MAX_CHANNELS][MAX_CONV_H][MAX_CONV_W];
+    TFXP filterCoeffs[MAX_CHANNELS][MAX_CONV_W][MAX_CONV_W];
 
-    // Array partitioning, for now complete, maybe change to cyclic?
-    // dim=2 for y, dim=3 for x
+    // Too big, need to comment
+    // TFXP lineBuffers[3][MAX_CHANNELS][MAX_INPUT_W];
+    // 3 different line buffers for each Row
+
+    TFXP lineBuffer0[MAX_CHANNELS*MAX_INPUT_W];
+    TFXP lineBuffer1[MAX_CHANNELS*MAX_INPUT_W];
+    TFXP lineBuffer2[MAX_CHANNELS*MAX_INPUT_W];
+
+
     #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=2
     #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=3
 
+    // Maybe change complete -> cyclic factor 3 (?)
+    #pragma HLS ARRAY_PARTITION variable=lineBuffer0  complete dim=1
+    #pragma HLS ARRAY_PARTITION variable=lineBuffer1  complete dim=1
+    #pragma HLS ARRAY_PARTITION variable=lineBuffer2  complete dim=1
 
-    TFXP rowBuffer[MAX_CONV_H][MAX_CHANNELS][MAX_INPUT_WIDTH];
 
-    #pragma HLS ARRAY_PARTITION variable=rowBuffer complete dim=1
+    loop_filters: for(uint32_t iFilter = 0; iFilter < numFilters; ++iFilter) {
+        // Need to add TRICOUNT for Vitis HLS sim
+        #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_NUM_FILTERS
 
-    // Outer loop over filters: for each filter, first cache its coefficients,
-    // then convolve the full input using those cached coefficients.
-    loop_filters : for (uint32_t iFilter = 0; iFilter < numFilters; ++iFilter) {
+        // Load buffers
+        load_channels_buff: for(uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
+            #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
 
-        // Load this filter's coefficients into the local cache (Task 2)
-        loop_load_coeffs : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
-            loop_load_coef_y : for (uint32_t y = 0; y < convHeight; ++y) {
-                loop_load_coef_x : for (uint32_t x = 0; x < convWidth; ++x) {
-                    // 3 perfectly nested loops, can flatten
-                    #pragma HLS loop_flatten
+            load_cols_buff: for(uint32_t cols = 0; cols < inputWidth; ++cols) {
+                #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_INPUT_W
+                #pragma HLS PIPELINE II=1
+
+                // loading rows -> lineBuffer
+                lineBuffer0[iChannel*inputWidth + cols] = *(input
+                                                        + iChannel*inputWidth*inputHeight
+                                                        + 0*inputWidth
+                                                        + cols);
+                lineBuffer1[iChannel*inputWidth + cols] = *(input
+                                                        + iChannel*inputWidth*inputHeight
+                                                        + 1*inputWidth
+                                                        + cols);
+                lineBuffer2[iChannel*inputWidth + cols] = *(input
+                                                        + iChannel*inputWidth*inputHeight
+                                                        + 2*inputWidth
+                                                        + cols);
+            }
+        } // done loading buffers
+
+        // loading filter coeffs for caching (task 2)
+        load_channels_filt: for(uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
+            #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
+
+            load_cols_filt: for(uint32_t cols = 0; cols < convWidth; ++cols) {
+                // convWidth always 3
+                #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_W max=MAX_CONV_W
+
+                load_rows_filt: for(uint32_t rows = 0; rows < convHeight; ++rows) {
+                    #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_H max=MAX_CONV_H
                     #pragma HLS PIPELINE II=1
-                    filterCoeffs[iChannel][y][x] = *(coeffs
-                                                    + iFilter*numChannels*convHeight*convWidth
-                                                    + iChannel*convHeight*convWidth
-                                                    + y*convWidth
-                                                    + x);
+
+                    // pay attention to loop order !!!!
+                    filterCoeffs[iChannel][rows][cols] = *(coeffs
+                                                        + iFilter*numChannels*convHeight
+                                                        + iChannel*convHeight*convWidth
+                                                        + rows*convWidth
+                                                        + cols);
                 }
             }
-        }
+        } // done loading filter coeffs
 
-        // Load the first 2 input rows before convolution loops (Task 3)
-        loop_load_rows_y : for (uint32_t y = 0; y < convHeight - 1; ++y) { // first 2 rows
-            loop_load_rows_x : for (uint32_t x = 0; x < inputWidth; ++x) {
-                loop_load_channels : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
-                    // 3 perfectly nested loops, can flatten
-                    #pragma HLS loop_flatten
-                    #pragma HLS PIPELINE II=1
-                    rowBuffer[y][iChannel][x] = *(input+iChannel*inputWidth*inputHeight
-                                                + y*inputWidth
-                                                + x);
-                }
-            }
-        }
+        // beginning of convolution (finally)
+        loop_height: for(uint32_t y = 0; y < (inputHeight-2); ++y) {
+            // max = 256-2
+            #pragma HLS LOOP_TRIPCOUNT min=1 max=254
 
-        // Convolve the input with the cached coefficients and write output (Task 3)
-        loop_convolve_y : for (uint32_t y = 0; y < (inputHeight - 2); ++y) {
-            // Load the next input row before the loops start
-            // New row at y + convHeight - 1 (= y + 2)
-            uint32_t newRow = y + convHeight - 1;
+            loop_width: for(uint32_t x = 0; x < (inputWidth-2); ++x) {
+                #pragma HLS LOOP_TRIPCOUNT min=1 max=254
 
-            // Only need 3 rows for next loops, cycle throûgh the slots
-            uint32_t rowSlot = newRow % convHeight;
-
-            loop_load_row_ch : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
-                loop_load_row_x : for (uint32_t x = 0; x < inputWidth; ++x) {
-                    // loop_load_ch and loop_load_row_x perfectly nested, can flatten
-                    #pragma HLS loop_flatten
-                    #pragma HLS PIPELINE II=1
-                    rowBuffer[rowSlot][iChannel][x] = *(input+iChannel*inputWidth*inputHeight
-                                                    + newRow*inputWidth
-                                                    + x);
-                }
-            }
-
-            loop_convolve_x : for (uint32_t x = 0; x < (inputWidth - 2); ++x) {
                 TFXP acc = 0;
 
-                loop_acc_channels : for (uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
-                    loop_acc_y : for (uint32_t cy = 0; cy < convHeight; ++cy) {
-                        // Can we do better here?
-                        #pragma HLS loop_flatten
+                loop_channel: for(uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
+                    #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
 
-                        rowSlot = (y + cy) % MAX_CONV_H;
+                    loop_acc: for(uint32_t cx = 0; cx < convWidth; ++cx) {
+                        #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_W max=MAX_CONV_W
+                        #pragma HLS PIPELINE II=1
 
-                        loop_acc_x : for (uint32_t cx = 0; cx < convWidth; ++cx) {
-                            // Timing violation: we have a negative Slack in Vitis HLS, might need to increase II
-                            #pragma HLS PIPELINE II=2
-                            TFXP pixelValue, coeffValue;
-                            coeffValue = filterCoeffs[iChannel][cy][cx];
-                            pixelValue = rowBuffer[rowSlot][iChannel][x+cx];
-                            acc += FXP_Mult(coeffValue, pixelValue, DECIMALS);
-                        }
+                        acc += FXP_Mult(filterCoeffs[iChannel][0][cx], lineBuffer0[iChannel*inputWidth + x + cx])
+                            + FXP_Mult(filterCoeffs[iChannel][1][cx], lineBuffer0[iChannel*inputWidth + x + cx])
+                            + FXP_Mult(filterCoeffs[iChannel][2][cx], lineBuffer0[iChannel*inputWidth + x + cx])
+                    }
+                } // done looping over the numChannels
+
+                *(output + iFilter*(inputHeight-2)*(inputWidth-2) + y*(inputWidth-2) + x) = acc;
+            }
+
+            // update lineBuffers
+            loop_width_update: for(uint32_t x = 0; x < inputWidth; ++x) {
+                #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_INPUT_W
+                #pragma HLS PIPELINE II=1
+
+                loop_channel_update: for(uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
+                    #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
+
+                    lineBuffer0[iChannel*inputWidth + x] = lineBuffer1[iChannel*inputWidth + x];
+                    lineBuffer1[iChannel*inputWidth + x] = lineBuffer2[iChannel*inputWidth + x]
+
+                    if(y <= (inputHeight-2)) {
+                        lineBuffer2[iChannel*inputWidth + x] = *(input
+                                                            + iChannel*inputWidth*inputHeight
+                                                            + (y+3)*inputWidth
+                                                            + x);
                     }
                 }
-
-                // output[iFilter][y][x] = acc
-                *(output + iFilter * (inputHeight - 2) * (inputWidth - 2)
-                         + y * (inputWidth - 2)
-                         + x) = acc;
-            } // end loop_convolve_x
-        } // end loop_convolve_y
-    } // end loop_filters
+            }
+        }
+    }
 }
