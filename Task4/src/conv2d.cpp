@@ -42,6 +42,12 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
     TFXP lineBuffer1[128*32];
     TFXP lineBuffer2[128*32];
 
+    // task 4: negative slack:/:/ Vitis HLS maps buffers to DRAMS, force to BRAM
+
+    #pragma HLS BIND_STORAGE variable=lineBuffer0 type=ram_2p impl=bram
+    #pragma HLS BIND_STORAGE variable=lineBuffer1 type=ram_2p impl=bram
+    #pragma HLS BIND_STORAGE variable=lineBuffer2 type=ram_2p impl=bram
+    
     #pragma HLS ARRAY_PARTITION variable=lineBuffer0 cyclic factor=4 dim=1
     #pragma HLS ARRAY_PARTITION variable=lineBuffer1 cyclic factor=4 dim=1
     #pragma HLS ARRAY_PARTITION variable=lineBuffer2 cyclic factor=4 dim=1
@@ -106,9 +112,9 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                 #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
                 
                 loop_load_row0_x:
-                for(uint32_t x = 0; x < MAX_INPUT_W; ++x) {
+                for(uint32_t x = 0; x < inputWidth; ++x) {
 
-                    #pragma HLS LOOP_TRIPCOUNT min=MAX_INPUT_W max=MAX_INPUT_W
+                    #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_INPUT_W
                     #pragma HLS PIPELINE II=1
 
                     lineBuffer0[iChannel*inputWidth + x] = *(input
@@ -124,7 +130,7 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                 #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
                 
                 loop_load_row1_x:
-                for(uint32_t x = 0; x < MAX_INPUT_W; ++x) {
+                for(uint32_t x = 0; x < inputWidth; ++x) {
 
                     #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_INPUT_W
                     #pragma HLS PIPELINE II=1
@@ -142,7 +148,7 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                 #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
                 
                 loop_load_row2_x:
-                for(uint32_t x = 0; x < MAX_INPUT_W; ++x) {
+                for(uint32_t x = 0; x < inputWidth; ++x) {
 
                     #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_INPUT_W
                     #pragma HLS PIPELINE II=1
