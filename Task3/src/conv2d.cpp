@@ -152,21 +152,25 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                 for(uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
 
                     #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
+                    #pragma HLS PIPELINE II=1
+
+                    TFXP acc_channel = 0;
 
                     loop_accumulate_ky:
-                    for (uint32_t ky = 0; ky < convHeight; ++ky) {
+                    for (uint32_t ky = 0; ky < MAX_CONV_H; ++ky) {
 
                         #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_H max=MAX_CONV_H
                         #pragma HLS UNROLL
 
                         loop_acc_kx:
-                        for (uint32_t kx = 0; kx < convWidth; ++kx) {
+                        for (uint32_t kx = 0; kx < MAX_CONV_W; ++kx) {
 
                             #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_W max=MAX_CONV_W
                             #pragma HLS UNROLL
 
                             TFXP pixelValue;
                             uint32_t indexBuff = base + x + kx;
+
                             if(ky == 0) {
                                 pixelValue = lineBuffer0[indexBuff];
                             } else if(ky == 1) {
@@ -178,6 +182,8 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                             acc += FXP_Mult(filterCoeffs[iChannel][ky][kx], pixelValue, DECIMALS);
                         }
                     }
+
+                    acc += acc_channel;
                     base += inputWidth;
                 }
 
