@@ -2,7 +2,8 @@
 
 inline TFXP FXP_Mult(TFXP a, TFXP b, uint32_t decimalBits = DECIMALS) {
     TFXP_MULT res = (TFXP_MULT)a * (TFXP_MULT)b;
-    return (TFXP)(res >> decimalBits);
+    res = res >> decimalBits;
+    return res;
 }
 
 void Conv2D_HW(TFXP *input, TFXP *output, TFXP *coeffs,
@@ -28,19 +29,17 @@ void Conv2D_HW(TFXP *input, TFXP *output, TFXP *coeffs,
     // TFXP lineBuffers[3][MAX_CHANNELS][MAX_INPUT_W];
     // 3 different line buffers for each Row, with biggest possible input seen in CNN
 
-    TFXP lineBuffer0[256*32];
-    TFXP lineBuffer1[256*32];
-    TFXP lineBuffer2[256*32];
-
+    TFXP lineBuffer0[127*32];
+    TFXP lineBuffer1[127*32];
+    TFXP lineBuffer2[127*32];
 
     #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=2
     #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=3
 
     // Maybe change complete -> cyclic
-    #pragma HLS ARRAY_PARTITION variable=lineBuffer0  cyclic factor=4
-    #pragma HLS ARRAY_PARTITION variable=lineBuffer1  cyclic factor=4
-    #pragma HLS ARRAY_PARTITION variable=lineBuffer2  cyclic factor=4
-
+    #pragma HLS ARRAY_PARTITION variable=lineBuffer0 cyclic factor=4
+    #pragma HLS ARRAY_PARTITION variable=lineBuffer1 cyclic factor=4
+    #pragma HLS ARRAY_PARTITION variable=lineBuffer2 cyclic factor=4
 
     loop_filters: for(uint32_t iFilter = 0; iFilter < numFilters; ++iFilter) {
         // Need to add TRICOUNT for Vitis HLS sim
@@ -68,7 +67,7 @@ void Conv2D_HW(TFXP *input, TFXP *output, TFXP *coeffs,
                                                         + 2*inputWidth
                                                         + cols);
             }
-        } // done loading buffers
+        } // done loading line buffers
 
         // loading filter coeffs for caching (task 2)
         load_channels_filt: for(uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
@@ -90,7 +89,7 @@ void Conv2D_HW(TFXP *input, TFXP *output, TFXP *coeffs,
                                                         + x);
                 }
             }
-        } // done loading filter coeffs
+        } // done loading filter coeffs, matches task2
 
         // beginning of convolution (finally)
         loop_height: for(uint32_t y = 0; y < (inputHeight-2); ++y) {
@@ -107,6 +106,7 @@ void Conv2D_HW(TFXP *input, TFXP *output, TFXP *coeffs,
 
                     loop_acc: for(uint32_t cx = 0; cx < convWidth; ++cx) {
                         #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_W max=MAX_CONV_W
+                        #pragma HLS PIPELINE II=1
 
                         acc += FXP_Mult(filterCoeffs[iChannel][0][cx], lineBuffer0[iChannel*inputWidth + x + cx])
                             + FXP_Mult(filterCoeffs[iChannel][1][cx], lineBuffer1[iChannel*inputWidth + x + cx])
