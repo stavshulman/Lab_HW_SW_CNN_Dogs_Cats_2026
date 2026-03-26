@@ -15,7 +15,9 @@ const uint32_t MAX_CONV_W   = 3;
 const uint32_t MAX_INPUT_W  = 128; // worst case seen in model.h for input width
 const uint32_t MAX_NUM_FILTERS = 256;
 
-// Check if convHeight = 3 is correct in header/cpp file
+// task 4: parallelizing num of filters, to change
+const uint32_t NUM_OUTPUT_FILTERS = 4;
+
 void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
       uint32_t numChannels, uint32_t numFilters,
       uint32_t inputWidth, uint32_t inputHeight,

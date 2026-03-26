@@ -13,7 +13,7 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
       uint32_t convWidth, uint32_t convHeight)
 {
     #pragma HLS INTERFACE m_axi port=input offset=slave bundle=gmem0
-    #pragma HLS INTERFACE m_axi port=output offset=slave bundle=gmem0
+    #pragma HLS INTERFACE m_axi port=output offset=slave bundle=gmem0 num_write_outstanding=4
     #pragma HLS INTERFACE m_axi port=coeffs offset=slave bundle=gmem1
 
     #pragma HLS INTERFACE s_axilite port=numFilters
@@ -24,10 +24,19 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
     #pragma HLS INTERFACE s_axilite port=convHeight
     #pragma HLS INTERFACE s_axilite port=return
 
-    TFXP filterCoeffs[MAX_CHANNELS][MAX_CONV_H][MAX_CONV_W];
+    // Task 2
+    //TFXP filterCoeffs[MAX_CHANNELS][MAX_CONV_H][MAX_CONV_W];
     
-    #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=2
+    //#pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=2
+    //#pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=3
+
+    // Task 3
+    TFXP filterCoeffs[NUM_OUTPUT_FILTERS][MAX_CHANNELS][MAX_CONV_H][MAX_CONV_W];
+
+    #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=1
+    //#pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=2
     #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=3
+    #pragma HLS ARRAY_PARTITION variable=filterCoeffs complete dim=4
 
     TFXP lineBuffer0[128*32];
     TFXP lineBuffer1[128*32];
@@ -42,32 +51,42 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
     uint32_t outputHeight = inputHeight - 2;
 
     loop_filters: 
-    for(uint32_t iFilter = 0; iFilter < numFilters; ++iFilter) {
+    for(uint32_t iFilter = 0; iFilter < numFilters; iFilter += NUM_OUTPUT_FILTERS) {
 
-        #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_NUM_FILTERS
+        #pragma HLS LOOP_TRIPCOUNT min=1 max=(MAX_NUM_FILTERS/NUM_OUTPUT_FILTERS+1)
 
-        // Task 2: load filter coeffs into buffer
-        loop_load_coeffs_channel: 
-        for(uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
+        // Task 4: parallelize NUM_OUTPUT_FILTERS
+        loop_filter_parallel:
+        for(uint32_t iFilterP = 0; iFilterP < NUM_OUTPUT_FILTERS; ++iFilterP) {
 
-            #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
+            // Unsure if we can unroll ????
 
-            loop_load_coeffs_y: 
-            for(uint32_t cy = 0; cy < convHeight; ++cy) {
+            #pragma HLS LOOP_TRIPCOUNT min=NUM_OUTPUT_FILTERS max=NUM_OUTPUT_FILTERS
+            #pragma HLS UNROLL
 
-                #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_H max=MAX_CONV_H
+            // Task 2: load filter coeffs into buffer
+            loop_load_coeffs_channel: 
+            for(uint32_t iChannel = 0; iChannel < numChannels; ++iChannel) {
 
-                loop_load_coef_x: 
-                for(uint32_t cx = 0; cx < convWidth; ++cx) {
+                #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
 
-                    #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_W max=MAX_CONV_W
-                    #pragma HLS PIPELINE II=1
+                loop_load_coeffs_y: 
+                for(uint32_t cy = 0; cy < MAX_CONV_H; ++cy) {
 
-                    filterCoeffs[iChannel][cy][cx] = *(coeffs
-                                                    + iFilter*numChannels*convHeight*convWidth
+                    #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_H max=MAX_CONV_H
+
+                    loop_load_coef_x: 
+                    for(uint32_t cx = 0; cx < MAX_CONV_W; ++cx) {
+
+                        #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_W max=MAX_CONV_W
+                        #pragma HLS PIPELINE II=1
+
+                        filterCoeffs[iFilterP][iChannel][cy][cx] = *(coeffs
+                                                    + (iFilter+iFilterP)*numChannels*convHeight*convWidth
                                                     + iChannel*convHeight*convWidth
                                                     + cy*convWidth
                                                     + cx);
+                    }
                 }
             }
         }
@@ -87,9 +106,9 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                 #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
                 
                 loop_load_row0_x:
-                for(uint32_t x = 0; x < inputWidth; ++x) {
+                for(uint32_t x = 0; x < MAX_INPUT_W; ++x) {
 
-                    #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_INPUT_W
+                    #pragma HLS LOOP_TRIPCOUNT min=MAX_INPUT_W max=MAX_INPUT_W
                     #pragma HLS PIPELINE II=1
 
                     lineBuffer0[iChannel*inputWidth + x] = *(input
@@ -105,7 +124,7 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                 #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
                 
                 loop_load_row1_x:
-                for(uint32_t x = 0; x < inputWidth; ++x) {
+                for(uint32_t x = 0; x < MAX_INPUT_W; ++x) {
 
                     #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_INPUT_W
                     #pragma HLS PIPELINE II=1
@@ -123,7 +142,7 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                 #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
                 
                 loop_load_row2_x:
-                for(uint32_t x = 0; x < inputWidth; ++x) {
+                for(uint32_t x = 0; x < MAX_INPUT_W; ++x) {
 
                     #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_INPUT_W
                     #pragma HLS PIPELINE II=1
@@ -141,9 +160,18 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
 
                 // 256 - 2
                 #pragma HLS LOOP_TRIPCOUNT min=1 max=254
-                #pragma HLS PIPELINE II=1
 
-                TFXP acc = 0;
+                //TFXP acc = 0;
+                // acc -> acc[iFilterP], task 4
+                TFXP acc[NUM_OUTPUT_FILTERS];
+
+                #pragma HLS ARRAY_PARTITION variable=acc complete dim=1
+
+                loop_empty_acc:
+                for(uint32_t iFilterP = 0; iFilterP < NUM_OUTPUT_FILTERS; ++iFilterP) {
+                    #pragma HLS UNROLL
+                    acc[iFilterP] = 0;
+                }
 
                 // base to accumulate conv, w/ base = iChannel*inputWidth
                 uint32_t base = 0;
@@ -154,7 +182,18 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                     #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_CHANNELS
                     #pragma HLS PIPELINE II=1
 
-                    TFXP acc_channel = 0;
+                    //TFXP acc_channel = 0;
+                    // acc_channel -> acc_channel[iFilterP], task 4
+
+                    TFXP acc_channel[NUM_OUTPUT_FILTERS];
+
+                    #pragma HLS ARRAY_PARTITION variable=acc_channel complete dim=1
+
+                    loop_empty_acc_channel:
+                    for(uint32_t iFilterP = 0; iFilterP < NUM_OUTPUT_FILTERS; ++iFilterP) {
+                        #pragma HLS UNROLL
+                        acc_channel[iFilterP] = 0;
+                    }
 
                     loop_accumulate_ky:
                     for (uint32_t ky = 0; ky < MAX_CONV_H; ++ky) {
@@ -179,15 +218,41 @@ void Conv2D_HW(TFXP *input, TFXP * output, TFXP * coeffs,
                                 pixelValue = lineBuffer2[indexBuff];
                             };
 
-                            acc += FXP_Mult(filterCoeffs[iChannel][ky][kx], pixelValue, DECIMALS);
+                            //acc += FXP_Mult(filterCoeffs[iChannel][ky][kx], pixelValue, DECIMALS);
+                            // acc_channel -> acc_channel[iFilterP], task 4
+
+                            loop_acc_channel_n_filter_mult:
+                            for(uint32_t iFilterP = 0; iFilterP < NUM_OUTPUT_FILTERS; ++iFilterP) {
+
+                                #pragma HLS UNROLL
+
+                                acc_channel[iFilterP] += FXP_Mult(filterCoeffs[iFilterP][iChannel][ky][kx], pixelValue, DECIMALS);
+                            }
                         }
                     }
 
-                    acc += acc_channel;
+                    //acc += acc_channel;
+                    // acc_channel -> acc_channel[iFilterP], task 4
+                    loop_accumulate_acc:
+                    for(uint32_t iFilterP = 0; iFilterP < NUM_OUTPUT_FILTERS; ++iFilterP) {
+
+                        #pragma HLS UNROLL
+
+                        acc[iFilterP] += acc_channel[iFilterP];
+                    }
+
                     base += inputWidth;
                 }
 
-                *(output + lineOffset + x) = acc;
+                //*(output + lineOffset + x) = acc;
+                // acc -> acc[iFilterP], task 4
+                loop_output_n_filter:
+                for(uint32_t iFilterP = 0; iFilterP < NUM_OUTPUT_FILTERS; ++iFilterP) {
+
+                    #pragma HLS UNROLL
+
+                    *(output + lineOffset + iFilterP*outputHeight*outputWidth + x) = acc[iFilterP];
+                }
             }
 
             // loop over y like multiplication:
