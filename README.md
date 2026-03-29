@@ -1,13 +1,13 @@
 # Lab on hardware-software digital systems codesign - Midterm
 ## Stav Shulman, 28.03.2026
-
+### Introduction
 ### Task 1: Basic convolution accelerator without optimizations
 
 In this task, the goal was to implement the convolution step of the CNN application as hardware. 
 
-I created two hardware files: conv2d.cpp and its header, conv2d.hpp, in addition to the hardware testbench, conv2DTestbench.cpp, all found in the Task1/src folder. The goal was to copy the convolution code in the software project, and adapting it to hardware, meaning I just needed to add the correct preprocessor directives, which maps the convolution arguments to the AXI interfaces.
+I created two hardware files: conv2d.cpp and its header, conv2d.hpp, in addition to the hardware testbench, conv2DTestbench.cpp, all found in the Task1/SW folder. The goal was to copy the convolution code in the software project, and adapting it to hardware, meaning I just needed to add the correct preprocessor directives, which maps the convolution arguments to the AXI interfaces.
 
-Once I simulated and implemented my hardware in Vitis HLS, I needed to consult the generated register map (xconv2d_hw_hw.h file in Task1/src) in order to map each function argument correctly in software. In the CConv2DProxy class, I modified the TRegs struct with the correct offsets (called "reserved" in the register map), because the arguments input, output and coeffs occupy 64 bits, whereas the xc7z020clg400-1 is a 32-bit processor with 32-bit physical address space, and the HLS tool generates 64-bit interfaces. I needed to ne careful that I only map to the lower 32-bit registers.
+Once I simulated and implemented my hardware in Vitis HLS, I needed to consult the generated register map (xconv2d_hw_hw.h file in Task1/SW) in order to map each function argument correctly in software. In the CConv2DProxy class, I modified the TRegs struct with the correct offsets (called "reserved" in the register map), because the arguments input, output and coeffs occupy 64 bits, whereas the xc7z020clg400-1 is a 32-bit processor with 32-bit physical address space, and the HLS tool generates 64-bit interfaces. I needed to be careful that I only map to the lower 32-bit registers.
 
 In addition, I kept the bias and ReLU in software, because when I ran the purely software application, I saw that 99.8% of computation time was purely spent in the convolution stage, whereas the bias and the ReLU times combined take about 1ms, which is negligeable in the first stages of our accelerator. Due to time constraints, I decided not to implement these functions in hardware.
 
@@ -35,9 +35,9 @@ Inside the big loop_filters, I created two seperate loops:
 - loop_load_channels: all coefficients are read once and only once from the DDR DRAM into the BRAM cache. I also pipelined the inner loop so that the HLS infers a burst read.
 - loop_convolve_y: the convolution slides over the coefficients read from the BRAM.
 
-
 ### Task 3
 ### Task 4
+### Overview of the solutions
 
 | Name | Description | Time (ms) | Frequency (MHz) | LUTs | FFs | BRAMs | DSPs | Cost | Pareto? |
 |------|-------------|-----------|-----------------|------|-----|-------|------|------|---------|
@@ -46,3 +46,10 @@ Inside the big loop_filters, I created two seperate loops:
 | Task 2 | Caching filter coefficients | x | 100 | x | x | x | x | x | x |
 | Task 3 | Caching 3 input rows, multiplication + loop optimizations | 8551 | 100 | 10700 | 16155 | 29.5 | 70| 22.05 | x |
 | Task 4 | 4 Filters calculated in parallel | 4441 | 100 | 13520 | 19105 | 43 | 169 | 37.73 | Yes |
+
+#### Additional information
+Due to time constraints, I did not do Task 5.
+
+This project was done individually. I got some helpful insights from my fellow classmates (big thanks to Philippe, Louane and Ciara!), but ultimately, I came up with the specific implementation of my solutions.
+
+AI use: I used inline suggestions from Github Copilot in VS Code. While it helped me write code faster with less syntax errors, and hugely helped with clean formatting, I think it's not efficient overall, because it suggested incorrect logic implementations, which required me to be careful even when the suggestions seemed "correct".  
