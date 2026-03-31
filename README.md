@@ -42,9 +42,9 @@ Inside the big loop_filters, I created two seperate loops:
 | Name | Description | Time (ms) | Frequency (MHz) | LUTs | FFs | BRAMs | DSPs | Cost | Pareto? |
 |------|-------------|-----------|-----------------|------|-----|-------|------|------|---------|
 | SW | SW-only app on Pynq | 28022 | 100 | n/a | n/a | n/a | n/a | 0 | Yes |
-| Task 1 | Convolution HW, no optimization | 87533 | 100 | 8200 | 13122 | 12.5 | 50 | 14.84 | x |
-| Task 2 | Caching filter coefficients | x | 100 | x | x | x | x | x | x |
-| Task 3 | Caching 3 input rows, multiplication + loop optimizations | 8551 | 100 | 10700 | 16155 | 29.5 | 70| 22.05 | x |
+| Task 1 | Convolution HW, no optimization | 87533 | 100 | 8200 | 13122 | 12.5 | 50 | 14.84 | No |
+| Task 2 | Caching filter coefficients | 41928 | 100 | 9702 | 14888 | 17.5 | 34 | 15.04 | No |
+| Task 3 | Caching 3 input rows, multiplication + loop optimizations | 8551 | 100 | 10700 | 16155 | 29.5 | 70| 22.05 | Yes |
 | Task 4 | 4 Filters calculated in parallel | 4441 | 100 | 13520 | 19105 | 43 | 169 | 37.73 | Yes |
 
 #### Additional information
