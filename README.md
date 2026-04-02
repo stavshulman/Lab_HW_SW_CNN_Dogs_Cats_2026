@@ -19,6 +19,8 @@ sudo ./ProgramOverlay.py bitstream_task3.bit
 sudo ./SW/cnnSolver dog.9499.jpg.rgba.planar
 ```
 
+Warning: I used Vitis HLS 2022.2 and Vivado 2022.2 on my Windows 11 computer, therefore, I do not know if the TCL scipts will work on Linux machines. However, the executables should all function without any issues.
+
 ### Task 1: Basic convolution accelerator without optimizations
 
 In this task, the goal was to implement the convolution step of the CNN application as hardware. 
