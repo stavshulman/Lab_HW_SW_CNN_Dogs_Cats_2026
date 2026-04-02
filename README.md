@@ -1,11 +1,29 @@
 # Lab on hardware-software digital systems codesign - Midterm
 ## Stav Shulman, 28.03.2026
 ### Introduction
+
+The goal of this midterm was to design a hardware accelerator for an application based CNN that clissifies images of dogs and cats in HLS. 
+
+Here is a step by step guide on how to test my project on the PYNQ board:
+
+1. in the "main" branch (important!) clone the repository on your device. 
+2. Connect to the PYNQ board via SSH.
+3. For each task, transfer the SW folder to the boad, as well as the dog or cat images, and build the software in the board. For the sake of simplicity, you can copy the whole task directory to only need to do one ```scp -r```. 
+4. For each task, transfer the bitstream and the .hwh in the board. For example, for task 3, transfer the ```bitstream_task3.bit``` and the ```vivado_task3_hwh.hwh``` files. Make sure to copy these files in the same directory as ```ProgramOverlay.py```.
+5. In the same directory as the bitstream, run
+```C
+sudo ./ProgramOverlay.py bitstream_task3.bit
+```
+6. In the directory before the SW directory, run the executable ```cnnSolver``` with an image of your choice! For example:
+```C
+sudo ./SW/cnnSolver dog.9499.jpg.rgba.planar
+```
+
 ### Task 1: Basic convolution accelerator without optimizations
 
 In this task, the goal was to implement the convolution step of the CNN application as hardware. 
 
-I created two hardware files: conv2d.cpp and its header, conv2d.hpp, in addition to the hardware testbench, conv2DTestbench.cpp, all found in the Task1/SW folder. The goal was to copy the convolution code in the software project, and adapting it to hardware, meaning I just needed to add the correct preprocessor directives, which maps the convolution arguments to the AXI interfaces.
+I created two hardware files: ```conv2d.cpp```and its header, ```conv2d.hpp```, in addition to the hardware testbench, ```conv2DTestbench.cpp```, all found in the Task1/SW folder. The goal was to copy the convolution code in the software project, and adapting it to hardware, meaning I just needed to add the correct preprocessor directives, which maps the convolution arguments to the AXI interfaces.
 
 Once I simulated and implemented my hardware in Vitis HLS, I needed to consult the generated register map (xconv2d_hw_hw.h file in Task1/SW) in order to map each function argument correctly in software. In the CConv2DProxy class, I modified the TRegs struct with the correct offsets (called "reserved" in the register map), because the arguments input, output and coeffs occupy 64 bits, whereas the xc7z020clg400-1 is a 32-bit processor with 32-bit physical address space, and the HLS tool generates 64-bit interfaces. I needed to be careful that I only map to the lower 32-bit registers.
 
@@ -38,7 +56,86 @@ Inside the big loop_filters, I created two seperate loops:
 - loop_convolve_y: the convolution slides over the coefficients read from the BRAM.
 
 ### Task 3
+
+For the third task, I initialized 3 row buffers called "lineBufferX":
+
+```C
+    TFXP lineBuffer0[128*32];
+    TFXP lineBuffer1[128*32];
+    TFXP lineBuffer2[128*32];
+
+    #pragma HLS ARRAY_PARTITION variable=lineBuffer0 cyclic factor=4 dim=1
+    #pragma HLS ARRAY_PARTITION variable=lineBuffer1 cyclic factor=4 dim=1
+    #pragma HLS ARRAY_PARTITION variable=lineBuffer2 cyclic factor=4 dim=1
+```
+
+The goal was to cache the three input rows such that we eliminate repeated DDR reads for a singular input pixel.
+
+I partitionned with 
+```C 
+cyclic factor=4
+```
+So that we use enough BRAM banks, so we can access 3 consecutive columns in the same cycle when we unroll:
+```C
+loop_accumulate_ky:
+for (uint32_t ky = 0; ky < MAX_CONV_H; ++ky) {
+
+    #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_H max=MAX_CONV_H
+    #pragma HLS UNROLL
+
+    loop_acc_kx:
+    for (uint32_t kx = 0; kx < MAX_CONV_W; ++kx) {
+
+        #pragma HLS LOOP_TRIPCOUNT min=MAX_CONV_W max=MAX_CONV_W
+        #pragma HLS UNROLL
+
+        TFXP pixelValue;
+        uint32_t indexBuff = base + x + kx;
+
+        if(ky == 0) {
+            pixelValue = lineBuffer0[indexBuff];
+        } else if(ky == 1) {
+            pixelValue = lineBuffer1[indexBuff];
+        } else {
+            pixelValue = lineBuffer2[indexBuff];
+        };
+
+        acc += FXP_Mult(filterCoeffs[iChannel][ky][kx], pixelValue, DECIMALS);
+    }
+}
+```
+
+Where both loops are of size 3 (known to preprocessor thanks to LOOP_TRIPCOUNT)
+
+I also added a "base" calculation that takes advantage of an outer loop to limit multiplication in the address logic (otherwise, Vitis HLS cannot pipeline with II=1). I implemented other "accumulation" multiplications when possible to increase efficiency and not use too many physical resources.
+
+The previous implementation sucessfully inferred burst transfers, which show a considerable reduction in execution time.
+
+I could have added an additional loop to more "elegantly" load the line buffers, and unroll this loop because we only have 3 different line buffers, but this solution is entirely functional, and at the time of writing this code, I did not master the unroll / tripcount pragmas.
+
 ### Task 4
+
+The goal of this task was to parallelize the computation of multiple output filters. The number of parallelized filters is controlled by a constant in ```conv2d.hpp```, that I set to 3 in the source code provided. 
+
+I expanded the filter coefficient array into:
+
+```C
+TFXP filterCoeffs[NUM_OUTPUT_FILTERS][MAX_CHANNELS][MAX_CONV_H][MAX_CONV_W];
+```
+
+With complete partitioning in the first dimension (i.e., for all the output filters we want to compute in parallel).Because of this change, I needed to rewrite the main loop ```loop_filters``` so that we stride ```NUM_OUTPUT_FILTERS``` at a time, instead of one filter at a time. For the loading of the filters, I added an additional loop, but that is fully unrolled, so that we can load filter coefficients for multiple filters at one. This is possible because the number of parallelized filters is known at compile time.
+
+Because of these changes, the accumulator variable becomes an array, that needed its own "loading loop", adding additional hardware.
+
+I also needed to add additional pragmas, notably 
+```C
+#pragma HLS BIND_STORAGE variable=lineBuffer0 type=ram_2p impl=bram
+#pragma HLS BIND_STORAGE variable=lineBuffer1 type=ram_2p impl=bram
+#pragma HLS BIND_STORAGE variable=lineBuffer2 type=ram_2p impl=bram
+```
+
+to make sure the line buffers are indeed in BRAM (and not in DRAM) so that the pipelining works and that we have no negative slack. 
+
 ### Overview of the solutions
 
 | Name | Description | Time (ms) | Frequency (MHz) | LUTs | FFs | BRAMs | DSPs | Cost | Pareto? |
@@ -52,6 +149,17 @@ Inside the big loop_filters, I created two seperate loops:
 #### Additional information
 Due to time constraints, I did not do Task 5.
 
+For debugging, the most useful strategy by far was to consult the synthesis report made by Vitis HLS. By naming all of my loops, I could see which loops were effectively pipelined and see which pragmas were ignored or not implemented as expected (for example, check that key loops have intervals = 1), which was very useful to see what part of the code needs reviewing.
+
+Some of the sections of the reports that I found particularly interesting:
+
+![Performance and ressource estimation](/photos/PerformanceRessourceEstimation.png)
+
+![Inferred Burst Summary](/photos/InferredBurstSummary.png)
+
+Where I saw if my pipelining/timing/ressource allocation was correct in the performance summary table, and if bursts could be inferred in the burst summary table. These tables were taken for the synthesis report of Task 4.
+
 This project was done individually. I got some helpful insights from my fellow classmates (big thanks to Philippe, Louane and Ciara!), but ultimately, I came up with the specific implementation of my solutions.
 
 AI use: I used inline suggestions from Github Copilot in VS Code. While it helped me write code faster with less syntax errors, and hugely helped with clean formatting, I think it's not efficient overall, because it suggested incorrect logic implementations, which required me to be careful even when the suggestions seemed "correct".  
+
