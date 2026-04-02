@@ -19,6 +19,8 @@ In the Hardware Manager in Vivado, I set the trigger for the first ILA (ILA0 on 
 
 ![System ILA](/photos/system_ILA1.png)
 
+NOTE: for task 1 and 2, I tried to export the Vivado TCL script, but for an unknown reason, the renerated scripts were empty, even though I checked I had a valid block diagram and project. I used the same TCL as for task 4, and I hoe it doesn't create any issues on your side.
+
 ### Task 2
 
 For the second task, the goal was to cache filter coefficients locally. I only needed to modily the two hardware files in Task2/src/. Given that a filter has a limited number of input channels, I declared a 3D array called filterCoeffs:
